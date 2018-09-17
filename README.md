@@ -90,6 +90,7 @@ filename:
       acc -po --output foo.tags --taggen -d foo.dats
 
   error hints: 
+
      y <~ x  :  'x' should be 'y' 
      y <?~ x :  'x' should (most likely) be 'y'
 
