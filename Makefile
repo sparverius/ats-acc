@@ -25,7 +25,8 @@ all::
 ######
 #
 
-all:: ; make -C $(DIR)
+all:: ; make -C $(DIR) && echo -n $? && echo "Build Successful" \
+|| printf "\nBuilding acc Failed\n" 
 all:: ; [ -f "./DATS/acc" ] && mv ./DATS/acc .
 
 #
@@ -47,13 +48,21 @@ test0:: all
 
 ######
 
-install:: test0
-install:: ; cp acc $(PATSHOME)/bin/
+install:: ; [ -f "./acc" ] && \
+echo "Installing acc at \$$PATSHOME/bin/" && mv acc $(PATSHOME)/bin/ || \
+echo "Oops. Something went wrong. Build acc manually with the command 'make && make install'"
 
-testrun:: ; @echo -e "\e[33mbuilding...\e[0m"
+
+######
+
+check_install:: ; printf "acc is located at: " && which acc
+
+######
+
+testrun:: ; @printf "\e[33mbuilding...\e[0m\n"
 testrun:: test0
-testrun:: ; @echo -e "\e[36mrunning tests... \e[0m" && echo -e "\e[36m>>>\e[0m"
-testrun:: ; @echo -e "Each test will output the current error message (with patscc) and the corresponding pretty-printed message (with acc)"
+testrun:: ; @printf "\e[36mrunning tests... \e[0m\n" && printf "\e[36m>>>\e[0m\n"
+testrun:: ; @printf "Each test will output the current error message (with patscc) and the corresponding pretty-printed message (with acc)\n"
 testrun:: ; -@sh ./TEST/tests.sh
 
 ######
