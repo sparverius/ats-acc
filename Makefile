@@ -25,7 +25,7 @@ all::
 ######
 #
 
-all:: ; make -C $(DIR) && echo -n $? && echo "Build Successful" \
+all:: ; make -C $(DIR) && printf "$?" && echo "Build Successful" \
 || printf "\nBuilding acc Failed\n" 
 all:: ; [ -f "./DATS/acc" ] && mv ./DATS/acc .
 
