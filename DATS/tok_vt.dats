@@ -105,7 +105,14 @@ print_token0(x) =
 implement
 print_token0_free(x) = 
   case+ x of
-  | ~TOKide ide => (print ide; strnptr_free(ide))
+  | ~TOKide ide => (
+      (
+        ifcase 
+        | ide = "d0exp" => print "a dynamic expression"
+        | _ => print ide
+      ); 
+      strnptr_free(ide)
+    )
   | ~TOKint itn => (print itn; strnptr_free(itn))
   | ~TOKs2e s2e => (print s2e; strnptr_free(s2e))
   | ~TOKwar war => (print war; strnptr_free(war))

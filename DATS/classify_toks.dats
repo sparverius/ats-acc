@@ -86,9 +86,40 @@ free_token3(x: token, y: token, z: token): void =
 (free_token(x); free_token(y); free_token(z))
 
 
+(*
+fn
+check_m_toks
+(xs: (token, token, token), ys: (string, string, string)): bool = 
+  tok_ide_eq(xs.0, ys.0) &&
+  tok_ide_eq(xs.1, ys.1) &&
+  tok_ide_eq(xs.2, ys.1)
+*)
+
 (* ****** ****** *)
 
 // BEGIN CLASSIFY
+
+implement
+parse_two(xs) = let
+  val (x0, x1, x2) = (xs.0, xs.1, xs.2)
+  val h = get_token_n_ide(x2, 0)
+  val e = get_token_n_ide(x2, 1)
+  val y = get_token_n_ide(x2, 2)
+  // val () = println!(h, " ", e, " ", y)
+  val hey = get_token_n_ide(x2, 4)
+  val res = 
+    (
+      ifcase
+      | tok_ide_eq(h, "the") &&
+        tok_ide_eq(e, "static") &&
+        tok_ide_eq(y, "expression") => @(x0, x1, ERRsimpre(x2))
+      | _ => @(x0, x1, ERRexit2(x2))
+    ): errtup
+    val () = free_token3(h,e,y)
+    val () = free_token(hey)  
+in
+  res
+end
 
 implement
 parse_three(xs) = let
@@ -96,7 +127,7 @@ parse_three(xs) = let
   val h = get_token_n_ide(x2, 0)
   val e = get_token_n_ide(x2, 1)
   val y = get_token_n_ide(x2, 2)
-  (* val () = println!(h, " ", e, " ", y) *)
+  // val () = println!(h, " ", e, " ", y)
   val hey = get_token_n_ide(x2, 4)
   val res = 
     (
@@ -120,6 +151,7 @@ parse_three(xs) = let
             ) 
           | tok_ide_eq(e, "symbol")        => @(x0, x1, ERRsymbol(x2))
           | tok_ide_eq(e, "constructor")   => @(x0, x1, ERRcstpat(x2))
+          (* | tok_ide_eq(e, "linear")   => @(x0, x1, ERRcstpat(x2)) *)
           | (*else*)_                      => @(x0, x1, ERRdynexp(x2))
         )
       | tok_ide_eq(h, "unsolved")          => @(x0, x1, ERRunsolv(x2))
@@ -148,7 +180,7 @@ when_err(xs) = let
     ifcase
     | tok_ide_eq(y0, "parsing") => @(x0, x1, ERRparse(x2))
     | tok_ide_eq(y0, "lexing")  => @(x0, x1, ERRlexing(x2))
-    | tok_int_eq(y0, "2")       => @(x0, x1, ERRexit2(x2))
+    | tok_int_eq(y0, "2")       => parse_two((x0,x1,x2))//@(x0, x1, ERRexit2(x2))
     | tok_int_eq(y0, "3")       => parse_three((x0,x1,x2))
     | (*else*)_                 => @(x0, x1, ERRother(x2)) 
   ): errtup

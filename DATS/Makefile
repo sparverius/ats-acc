@@ -7,8 +7,9 @@ MAKEFLAGS += --silent
 
 ######
 
-PATSCC=\
-$(PATSHOME)/bin/patscc
+PATSCC=acc -pc
+# \
+# $(PATSHOME)/bin/patscc
 PATSOPT=\
 $(PATSHOME)/bin/patsopt
 ATSCC2JS=\

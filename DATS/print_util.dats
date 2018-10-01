@@ -13,15 +13,21 @@
 
 #define print_space print(" ")
 #define print_ident3 print("   ")
-#define print_ident6 print("      ")
-#define print_ident3_nl print("\n   ")
+(* #define print_ident6 print("      ") *)
+(* #define print_ident3_nl print("\n   ") *)
 #define print_ident6_nl print("\n      ")
-#define print_after_error3 print("\n   ")
+
+(* #define print_after_error3 print("\n   ") *)
 (* #define print_after_error3 print("\n      ") *)
+
+#define print_ident6 print("      ")
+#define print_ident3_nl print("   ")
+(* #define print_ident6_nl print("      ") *)
+
 
 (* #define print_ident3_nl print("   ") *)
 (* #define print_ident6_nl print("      ") *)
-(* #define print_after_error3 print(" ") *)
+#define print_after_error3 print(" ")
 
 
 (* ****** ****** *)
@@ -95,7 +101,7 @@ print_str_color_show
 fn 
 print_str_color_sgn
 (xs: string, color: bool): void = 
-  print_str_colors(xs, color, "light_green", "bold")
+  print_str_colors(xs, color, "light_magenta", "bold")
 
 (* ****** ****** *)
 
