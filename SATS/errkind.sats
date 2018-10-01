@@ -22,7 +22,37 @@ datavtype errkind =
   | ERRfound  of toks 
   | ERRlast   of toktup // the summary i.e. "exit(ATS): ..."
   | ERRunit   of () 
+//(*
+  | ERRsimpre of toks  // the static expression needs to be impredicative 
+                         // but it is assigned the sort [...].
+//*)
+    
+(*
 
+  | ERRnot_ascribed of toks
+example ::
+//
+fn
+print_toks_tokens2(xs: !toks) = let
+  implement(env)
+  list_vt_foreach$fwork<token><env>(c,env)
+    = (fprint_token(stdout_ref, c); nl)
+in
+  list_vt_foreach(xs)
+end
+
+// ^^^^^^^ // below is the message
+
+error(2): 
+the dynamic expression is expected to be ascribed a type but it is not.
+*)
+
+
+
+(*
+  | ERRlindynexp of toks // 'the linear dynamic expression cannot be assigned the type
+  | ERRnonlindynexp of toks // 'the (non-linear) dynamic expression cannot be assigned the type
+*)
 
 (* ****** ****** *)
 
@@ -113,6 +143,10 @@ print_unit((* *)): void
 fun{}
 print_last(xs: toktup, color: bool): void
 
+//(*
+fun{}
+print_simpre(xs: toks, color: bool): void
+//*)
 
 (* ****** ****** *)
 

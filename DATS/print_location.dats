@@ -1,3 +1,28 @@
+
+#ifndef TOKENS_NONE
+
+  #define TOKENS_NONE
+
+  staload UN = "prelude/SATS/unsafe.sats"
+
+  #include "./token.dats"
+  #include "./tokenize.dats"
+  #include "./mylib/bashstr.dats"
+  #include "./token_lib.dats"
+  #include "./tok_vt.dats"
+  #include "./errkind.dats"
+  #include "./classify_toks.dats"
+  #include "./print_util.dats"
+  #include "./simplify_print.dats"
+  #include "./print_errkind.dats"
+
+
+#endif
+
+
+(* typedef loc0 = (int, int, int, int) *)
+staload "./../SATS/print_location.sats"
+
 fn
 print_location
 (xs: !List0_vt(char)): void 
@@ -11,25 +36,62 @@ end
 
 
 fn
+print_location_colored
+(xs: !List0_vt(char), loc: loc0): void = let
+  val aux_color = light_gray
+  fun
+  aux(xs: !List0_vt(char), i: int): void = 
+    case+ xs of 
+    | nil_vt() => (prcc)
+    | cons_vt(x, xs) => let
+        (* val () = println!(loc.1) *)
+         val () = (if (i >= loc.2 - 1 && i <= loc.3 - 1) then (prc(red)) else prcc)
+         val () = fprint(stdout_ref, x)
+          (* val () = println!("  (i, loc.2, loc.3) = (", i, ", ", loc.2, ", ", loc.3, ")  ") *)
+      in
+        (aux(xs, i+1))
+      end
+
+in
+  (* prc(aux_color);  *)
+  aux(xs, 0);
+  (* prcc;   *)
+end
+
+
+fn
 go_to_point
-(xs: !List0_vt(char), loc: (int, int)): void = let
-  val () = (assertloc(loc.0 > 0); assertloc(loc.1 >= loc.0))
+(xs: !List0_vt(char), loc: loc0, color: bool): void = let
+  (* val () = (assertloc(loc.0 > 0); assertloc(loc.1 >= loc.0)) *)
   fun 
   auxmain
   (xs: !List0_vt(char), n: int, res: List0_vt(char)): void 
   = (
       case+ xs of 
-      | nil_vt() => list_vt_free(res)
-      | cons_vt(y, ys) => (
-        ifcase
-        | n = loc.1 - 1 => let 
+      | nil_vt() => let 
             val z = list_vt_reverse(res)
           in
-            print_location(z); 
+//            print_location(z); 
+            print_location_colored(z, loc);
+            list_vt_free(z)
+          end //list_vt_free(res)
+      | cons_vt(y, ys) => (
+        ifcase
+        | y = '\n' => auxmain(ys, n+1, res)
+        | n = loc.0 - 1 => (auxmain(ys, n, cons_vt(y, res)))
+        | n > loc.0 =>  let 
+            val z = list_vt_reverse(res)
+          in
+//            print_location(z); 
+            (
+              if color 
+                then print_location_colored(z, loc) 
+              else print_location(z)
+            );
+            (* prc(yellow); *)
             list_vt_free(z)
           end
-        | n >= (loc.0 - 1) => auxmain(ys, n+1, cons_vt(y, res))
-        | _ => auxmain(ys, n+1, res)
+        | _ => auxmain(ys, n, res)
       )
     )
 in
@@ -39,17 +101,21 @@ end
 
 fn
 get_point_path
-(path: string, loc: (int, int)): void = let
+(path: string, loc: loc0, color: bool): void = let
   val in_f = (fileref_open_exn(path, file_mode_r)):FILEref
   val toks = streamize_fileref_char(in_f)
   val xs = stream2list_vt(toks)
-in (
-  print "* ";
-  go_to_point(xs, loc);
-  print " *\n";
+in 
+(
+  (* print_ident3; *)
+  print(loc.0);
+  print("| ");
+  go_to_point(xs, loc, color);
+  nl;
   fileref_close(in_f);
   list_vt_free(xs)
-) end
+) 
+end
 
 
 fn 
@@ -77,10 +143,35 @@ in
 end
 
 
+
+// for printing exact error location 
+// i.e.
+// val () = ( a :=: b )
+//            ^~~~~~~
+fn
+print_arrow
+(n: int, z: int, offset: int, color: bool): void = let
+  (* val () = println!("offset = ", offset) *)
+  fun
+  aux(i: int): void = 
+    ifcase
+    (* | i = (n + offset + 2) => (print('^'); aux(i+1)) *)
+    | i >= n + offset + 1 && i <= z + offset + 1 => (print('^'); aux(i+1))
+    | i > z + offset + 1 => ()
+    | _ => (print ' '; aux(i+1))
+in
+  (* println!("(n, z, offset) = (", n, ", ", z, ", ", offset, ")\n"); *)
+  (if color then prc(red));
+  aux(0);
+  (if color then prcc)
+end
+
+
 fn 
 get_path
-(path: !List_vt(token), loc: (int, int)): void = let 
+(path: !List_vt(token), loc: loc0, color: bool): void = let 
   val () = assertloc(isneqz path)
+  // should check path exists
   fun 
   auxmain(xs: !List0_vt(token), res: List0_vt(char)): void = 
     case+ xs of 
@@ -91,9 +182,11 @@ get_path
             val str = string_make_list_vt0(tmp)
             val str2 = $UN.strnptr2string(str)
           in
-            print!(str2); // uncomment to see the string rep of path
-            get_point_path(str2, loc);
-            list_vt_free(res); strnptr_free(str)
+            (* print!(str2); // uncomment to see the string rep of path *)
+            get_point_path(str2, loc, color);
+            list_vt_free(res); strnptr_free(str);
+            (* print_arrow(loc.2, loc.3, color) *)
+            (* print_arrow(loc.) *)
           end
         | _ => list_vt_free(res)
       )
@@ -119,6 +212,9 @@ get_path
 in
   auxmain(path, nil_vt())
 end
+
+
+(* ****** ****** *)
 
 
 

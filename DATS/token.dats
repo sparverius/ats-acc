@@ -1,6 +1,7 @@
 (* ****** ****** *)
 
 staload "./../SATS/token.sats"
+staload "./../SATS/token_util.sats"
 
 (* ****** ****** *)
 

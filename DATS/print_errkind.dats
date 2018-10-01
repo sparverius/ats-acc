@@ -16,16 +16,80 @@
 #endif
 
 
+fn 
+print_wrap(xs: toks): void = let
+  fun
+  auxmain(xs0: toks, i: int): void = 
+    case+ xs0 of 
+    | ~nil_vt() => () 
+    | ~cons_vt(x, xs) => let
+        val len = i + tok_get_len(x)
+      in
+        (
+          ifcase
+          | len >= 79 => (
+              ifcase
+              | is_spc(x) => 
+                (nl; print_ident3; free_token(x); auxmain(xs, 3))
+              | _ => 
+                (nl; print_ident3; print_token0_free(x); auxmain(xs, 3))
+            )
+          | _ => (print_token0_free(x); auxmain(xs, len))
+        )
+      end
+in
+  auxmain(xs, 3)
+end
+
+implement{}
+print_simpre
+(xs, color) = let
+  val (error, rest) = takeskip_until_in_free(xs, lam i => is_col(i))
+  val rest = drop_exn_free(rest, 0)
+  val (error_statement, rest) = 
+    takeskip_until_free(rest, lam i => is_osq(i))
+
+in
+//  prints 'error(...):'
+    print_ident3; 
+    print_toks_color_err(error, color);
+    nl;
+    print_ident3;
+//
+    (
+      if isneqz rest 
+      then let
+          val rest = drop_exn_free(rest, 0)
+        in
+          (
+            print_wrap(error_statement); 
+            nl; 
+            print_ident6; 
+            simplify_print(rest, color)
+          )
+        end
+      else (free_toks(rest); print_wrap(error_statement))
+    )
+end
+
 
 
 implement{}
 print_warn
-(xs, color) = (print_ident3; print_toks_free_nonewln(xs))
+(xs, color) = let // (print_ident3; print_toks_free_nonewln(xs))
+  val (error, rest) = takeskip_until_in_free(xs, lam i => is_col(i))
+in
+  print_ident3;
+  print_toks_color_err(error, color);
+  print_after_error3;
+  (* print_ident3;  *)
+  print_toks_free_nonewln(rest);
+end
 
 
 implement{}
 print_parse
-(xs, color) = (print_ident3; print_toks_free_nonewln(xs))
+(xs, color) = (print_ident3; simplify_print(xs, color)) //print_toks_free_nonewln(xs))
 
 
 implement{}
@@ -45,7 +109,7 @@ print_lexing
 implement{}
 print_found
 (xs, color) = let
-  val (h0, t0) = takeskip_until_in_free(xs, lam i => is_col(i))
+  val (error, t0) = takeskip_until_in_free(xs, lam i => is_col(i))
   // h0 ... error(3):
   val x0 = drop_exn_free(t0, 0)
   val (h1, t1) = takeskip_until_in_free(x0, lam i => is_col(i))
@@ -58,7 +122,7 @@ in
   (
     print_ident3;
     // print_toks_free_nonewln(h0);
-    print_toks_color_err(h0, color);
+    print_toks_color_err(error, color);
     print_after_error3;
     print_toks_free(h1);
     print_ident3;
@@ -73,36 +137,32 @@ end
 implement{}
 print_sorts
 (xs, color): void = let
-
-  val (h0, t0) = takeskip_until_in_free(xs, lam i => is_col(i))
-  // h0 ... 'error(3):'
+  val (error, t0) = takeskip_until_in_free(xs, lam i => is_col(i))
   val t0 = drop_exn_free(t0, 0) // drop leading space
-  val (h1, t1) = takeskip_until_free(t0, lam i => is_col(i))
+  val (mismatch, t1) = takeskip_until_free(t0, lam i => is_col(i))
   // h1 ... ' mismatch of sorts ...'
   val t1 = drop_exn_free(t1, 1) // drop leading space
   val t2 = skip_until_free(t1, lam i => is_osq(i))
-  val (par, rest) = peek_square_list_osq(t2) 
   // par ... the needed sort
+  val (needed_sort, rest) = peek_square_list_osq(t2) 
   val t3 = skip_until_free(rest, lam i => is_osq(i))
-
-  val (par2, rest2) = peek_square_list_osq(t3) 
-  // par2 ... the needed sort
+  // par2 ... the actual sort
+  val (actual_sort, rest2) = peek_square_list_osq(t3) 
   val () = (free_toks(rest2))
-  
-  val sgn = "  <~  "
+  (* val sgn = "  <~  " *)
+  val sgn = "  ~~>  "
 in 
   (
     print_ident3;
-    print_toks_color_err(h0, color);
+    print_toks_color_err(error, color);
     // print_toks_free_nonewln(h0);
     print " ";
-    print_toks_free_nonewln(h1);
+    print_toks_free_nonewln(mismatch);
     nl;
     print_ident6_nl;
-    simplify_print(par, color);
-    (* print sgn; *)
+    simplify_print(actual_sort, color);
     print_str_color_sgn(sgn, color);
-    simplify_print(par2, color)
+    simplify_print(needed_sort, color)
   ) 
 end
 
@@ -111,43 +171,39 @@ end
 implement{}
 print_sortu
 (xs, color) = let
-  val (h0, t0) = takeskip_until_in_free(xs, lam i => is_col(i))
-  // h0 ... 'error(3):'
+  val (error, t0) = takeskip_until_in_free(xs, lam i => is_col(i))
   val t0 = drop_exn_free(t0, 0) // drop leading space
   val (h1, t1) = takeskip_until_free(t0, lam i => is_col(i))
   // h1 ... ' mismatch of sorts ...'
   val t1 = drop_exn_free(t1, 1) // drop leading space
-
   val t2 = skip_until_in_free(t1, lam i => is_col(i))
   val t2 = drop_exn_free(t2, 0) // drop leading space
-
   val (par, rest) = takeskip_until_free(t2, lam i => is_nwl(i))
-
   val t3 = skip_until_free(rest, lam i => is_col(i))
   val t3 = drop_exn_free(t3, 1)
-
   val (par2, rest2) = takeskip_until_free(t3, lam i => is_nwl(i))
   val () = (free_toks(rest2))
-  val sgn = "  <~  "
+  (* val sgn = "  <~  " *)
+  val sgn = "  ~~>  "
 in (
   print_ident3;
-  print_toks_color_err(h0, color);
+  print_toks_color_err(error, color);
   (* print_toks_free_nonewln(h0);  *)
   print " ";
   print_toks_free_nonewln(h1);
   nl;
   print_ident6_nl;
-  simplify_print(par, color);
-  (* print sgn; *)
+  simplify_print(par2, color);
   print_str_color_sgn(sgn, color);
-  simplify_print(par2, color)
+  simplify_print(par, color)
+
 ) end
 
 
 implement{}
 print_tyleq
 (xs, color) = let
-  val (h0, t0) = takeskip_until_in_free(xs, lam i => is_col(i))
+  val (error, t0) = takeskip_until_in_free(xs, lam i => is_col(i))
   val (h1, t1) = takeskip_until_in_free(t0, lam i => is_col(i))
   val (h2, t2) = takeskip_until_in_free(t1, lam i => is_col(i))
   val (h3, t3) = takeskip_until_free(t2, lam i => tok_ide_eq(i, "The"))
@@ -173,27 +229,35 @@ print_tyleq
 
   val len = lt40 + lh30 + 6 + 3 // the 3 is for indentation
   (* val () = if  *)
-  val sgn = "  <~  " // 6 chars long
+  (* val sgn = "  <~  " // 6 chars long *)
+   val sgn = "  ~~>  " // 6 chars long 
+  //val sgn = "\n   ~> " // 6 chars long
+  val sgn_overflow = "~~>  "
 in
 (
   print_ident3;
   (* print_toks_free_nonewln(h0); // *)
-  print_toks_color_err(h0, color);
+  print_toks_color_err(error, color);
   print_after_error3;
   print_toks_free_nonewln(h10);
-  nl2;
+  (* nl2; *)
   free_toks(h2);
   free_toks(h4);
-
-  print_ident6;
-  simplify_print(t40, color);
+  nl;
+  (* print_ident6; *)
+  print_ident6_nl;
+  
+  (* simplify_print(t40, color); *) // // orig
+  simplify_print(h30, color);
   (* (if len > 80 then print "  <~\n      " else print sgn); *)
   (
-    if len > 80
-    then print_str_color_sgn("  <~\n      ", color) 
+    if len > 80 
+    then (print_ident6_nl; print_str_color_sgn(sgn_overflow, color))//"  <~\n      ", color) 
     else print_str_color_sgn(sgn, color)
   );
-  simplify_print(h30, color);
+    (* simplify_print(h30, color); *) // // orig
+  simplify_print(t40, color);
+
 )
 end
 
@@ -233,12 +297,11 @@ end
 implement{}
 print_cstpat
 (xs, color) = let
-  val (x0, xs0) = takeskip_until_free(xs, lam x => is_col(x))
+  val (error, xs0) = takeskip_until_free(xs, lam x => is_col(x))
 
   val xs1 = skip_until_free(xs0, lam x => is_ide(x))
 
-
-  val (x1, xs2) = takeskip_until_free(xs1, lam x => is_osq(x))
+  val (error_statement, xs2) = takeskip_until_free(xs1, lam x => is_osq(x))
 
   val (xs3, rest) = peek_square_list_osq(xs2)
 
@@ -246,11 +309,12 @@ in
 (
   print_ident3;
   (* print_toks_free_nonewln(x0); *)
-  print_toks_color_err(x0, color);
+  print_toks_color_err(error, color);
   free_toks(rest);
   print ":";
-  print_ident3_nl;
-  print_toks_free(x1);
+  (* print_ident3_nl; *) // // orig
+  print_after_error3;
+  print_toks_free(error_statement);
 
   print_ident6_nl;
   print "[ ";
@@ -263,11 +327,11 @@ end
 implement{}
 print_dynexp
 (xs: toks, color: bool): void = let
-  val (x0, xs0) = takeskip_until_in_free(xs, lam x => is_col(x))
+  val (error, rest) = takeskip_until_in_free(xs, lam x => is_col(x))
 
   val (x1, xs1) 
     = takeskip_until_in_free
-      (xs0, lam x => tok_ide_eq(x, "type") || tok_ide_eq(x, "value"))
+      (rest, lam x => tok_ide_eq(x, "type") || tok_ide_eq(x, "value"))
 
   val x1 = drop_exn_free(x1, 0)
 
@@ -275,32 +339,45 @@ print_dynexp
   val () = (
     print_ident3;
     (* print_toks_free_nonewln(x0);  *)
-    print_toks_color_err(x0, color);
+    print_toks_color_err(error, color);
     print_after_error3
   )
 
+  val (statement, t1) = takeskip_until_free(x1, lam i => is_osq(i))
+  val (inner_bracket, t2) = takeskip_until_in_free(t1, lam i => is_csq(i))
+  val inner_bracket = drop_exn_free(inner_bracket, 0)
 
-  val (h1, t1) = takeskip_until_free(x1, lam i => is_osq(i))
-  val (h2, t2) = takeskip_until_in_free(t1, lam i => is_csq(i))
+  // print statement ... 'the dynamic expression cannot ....' 
+  //   however only until open square bracket
+  val () = print_toks_free_nonewln(statement);
 
-  val () = print_toks_free_nonewln(h1);
-
-
-  // h2 is whatever is inside square brackets [...]
+  // 'inner_bracket' is whatever is inside square brackets [...]
   val () = (
-    if isneqz h2 then let
-        val h2 = take_until_free2(h2, lam i => tok_chr_eq(i, '$'))
+    if isneqz inner_bracket then let
+        val inner_bracket 
+          = take_until_free2(inner_bracket, lam i => tok_chr_eq(i, '$'))
         // turn xs$111(-1) into just xs
       in
-        (print_toks_free_nonewln(h2); print "]") 
+        (
+          nl;
+          print_ident6;//print_ident6;print_ident3;
+//          print "[";
+          print "\"";
+          print_toks_free_nonewln(inner_bracket); 
+          print "\"";
+//          print "]";
+          (* print("THERE"); *)
+        ) 
       end
-    else free_toks(h2)
+    else free_toks(inner_bracket)
   )
+
   val () = (
     if isneqz t2 then
       (
-        nl; 
-        print_ident3;
+        (* nl;  *)
+        (* print_ident3; *)
+        print " ";
         print_toks_free_nonewln_skip1(t2)
       )
     else free_toks(t2)
@@ -397,9 +474,10 @@ in
           in 
             nl; // ???? is this needed?
             print_ident6_nl;
-            simplify_print(partail_tail, color);
-            print "  <?-  ";
             simplify_print(first0, color);
+            print "  ~?>  ";
+            simplify_print(partail_tail, color);
+
           end
         ) else (free_toks(first0); free_toks(partail_tail))
       );
@@ -424,12 +502,13 @@ end
 implement{}
 print_exit2
 (xs, color) = let
-  val (hs, ts) = takeskip_until_in_free(xs, lam i => is_col(i))
+  val (error, ts) = takeskip_until_in_free(xs, lam i => is_col(i))
+
   val () = (
     print_ident3; 
     (* print_toks_free(hs);  *)
-    print_toks_color_err(hs, color);nl;
-    
+    print_toks_color_err(error, color);
+    nl;
     print_ident3
   )
   val xs = drop_exn_free(ts, 0)
@@ -444,8 +523,8 @@ print_exit2
           ifcase
           | len >= 79 => (
               ifcase
-              | is_spc(x) => (print_ident3_nl; free_token(x); auxmain(xs, 3))
-              | _ => (print_ident3_nl; print_token0_free(x); auxmain(xs, 3))
+              | is_spc(x) => (nl; print_ident3(* _nl *); free_token(x); auxmain(xs, 3))
+              | _ => (nl; print_ident3(* _nl *);print_token0_free(x); auxmain(xs, 3))
             )
           | _ => (print_token0_free(x); auxmain(xs, len))
         )
@@ -458,7 +537,7 @@ end
 implement{}
 print_symbol
 (xs, color) = let
-    val (h0, t0) = takeskip_until_in_free(xs, lam i => is_col(i))
+    val (error, t0) = takeskip_until_in_free(xs, lam i => is_col(i))
     val l1 = drop_exn_free(t0, 0)
     val (h1, t1) = takeskip_until_in_free(l1, lam i => is_nwl(i))
     val (h2, t2) = takeskip_until_in_free(t1, lam i => is_nwl(i))
@@ -467,7 +546,7 @@ in
   (
     print_ident3; 
     // print_toks_free_nonewln(h0);
-    print_toks_color_err(h0, color);
+    print_toks_color_err(error, color);
     print_after_error3;
     print_toks_free_nonewln(h1);
     (

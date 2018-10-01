@@ -45,6 +45,9 @@ implement free_errkind(x): void = {
       | ~ERRnonex  l => free_toks(l)
       | ~ERRlast   l => (free_toktup(l))
       | ~ERRunit   _ => ()
+//(*
+      | ~ERRsimpre  l => free_toks(l)
+//*)
   )
 }
 
@@ -70,6 +73,9 @@ get_errkind_string(xs) = (
     | ERRsortu  _ => "ERRsortu"
     | ERRnonex  _ => "ERRnonex"
     | ERRunit   _ => "ERRunit"
+//(*
+    | ERRsimpre _ => "ERRstaimpre"
+//*)
 )
 
 
@@ -94,7 +100,9 @@ implement{} print_show   (xs: toks, color: bool): void = (free_toks(xs))
 implement{} print_warn   (xs: toks, color: bool): void = (free_toks(xs))
 implement{} print_unit   ((*    *)): void = ()
 implement{} print_last (xs: toktup, color: bool): void = (free_toktup(xs))
-
+//(*
+implement{} print_simpre (xs: toks, color: bool): void = (free_toks(xs))
+//*)
 
 implement{}
 print_errkind_single(x2, color) = (
@@ -117,6 +125,10 @@ print_errkind_single(x2, color) = (
   | ~ERRlast   x => print_last<>(x, color)
   | ~ERRwarn   x => print_warn<>(x, color)
   | ~ERRunit   _ => print_unit<>( )
+//(*
+  | ~ERRsimpre x => print_simpre<>(x, color)
+//*)
+
 ) 
 
 (* ****** ****** *)

@@ -10,6 +10,24 @@ staload UN = "prelude/SATS/unsafe.sats"
 
 staload "libats/libc/SATS/stdio.sats"
 
+(*
+extern
+fun
+popen_exn:(string, string) -> FILEref = "mac#popen"
+
+extern
+fun
+fputs_exn : (string, FILEref) -> void = "mac#fputs"
+
+extern
+fun
+fgets0_gc : (int, FILEref) -> Strptr0 = "mac#fgets"
+
+extern
+fun
+pclose0_exn : (FILEref) -> int = "mac#pclose"
+*)
+
 extern
 fn 
 pipe_stream_vt0 // version used
@@ -87,7 +105,7 @@ pipe_stream_vt_system(cmd: string, file_in: FILEref): stream_vt(char) = xs where
 
 
 
-(*
+
 fun
 pipe_stream_vt1
   (cmd: string): stream_vt(charNZ) = svt where 
@@ -208,4 +226,3 @@ end
 
 val status = pclose0_exn(rfp)
 }
-*)
