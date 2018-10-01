@@ -9,6 +9,13 @@ tokens_to_messages_free
 (xs: toks): List0_vt(toktup)
 
 (**
+  parses the 'error(2)' messages
+*)
+fn
+parse_two
+(xs: toktup): errtup
+
+(**
   parses the 'error(3)' messages
 *)
 fn
