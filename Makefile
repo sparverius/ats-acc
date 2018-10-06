@@ -46,6 +46,9 @@ testall:: cleanall
 test0:: cleanall
 test0:: all
 
+trytest: test0
+trytest: ; ./acc tcatsc ${ARG1}
+
 ######
 
 install:: ; [ -f "./acc" ] && \

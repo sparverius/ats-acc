@@ -1,14 +1,21 @@
 (* ****** ****** *)
 
+
 #ifndef TOKENS_NONE
 
+  #define TOKENS_NONE
+
   #include "share/atspre_staload.hats"
-  #staload UN = $UNSAFE
+  #staload UN = "prelude/SATS/unsafe.sats"
   #include "./token.dats"
 
 #endif
 
 (* ****** ****** *)
+
+(* staload UN = "prelude/SATS/unsafe.sats" *)
+staload "./../SATS/token.sats"
+
 
 
 extern 
@@ -39,11 +46,7 @@ macdef prelude_string_make_rlist = string_make_rlist
 fun 
 aux1
 (c0: char,cs: stream_vt(char)) : stream_vt_con(token) = 
-(*
-let 
-  val () = print!(c0)
-in
-*)
+// let val () = print!(c0) in
 (
   ifcase
   | isalpha(c0) => aux1_ide(cs, list_vt_sing(c0))
@@ -57,9 +60,7 @@ in
   | isspc(c0) => stream_vt_cons(TOKspc(c0), tokenize(cs))
   | _(* else *) => stream_vt_cons(TOKchr(c0), tokenize(cs))
 )
-(*
-end
-*)
+//end
 
 and
 string_make_rlist0
@@ -149,6 +150,5 @@ end // end of [local]
 
 
 (* ****** ****** *)
-
 
 (* end of [Tokenizer.dats] *)

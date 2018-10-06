@@ -1,7 +1,9 @@
+
 #ifndef TOKENS_NONE
 
-#include "./token.dats"
-staload UN = "prelude/SATS/unsafe.sats"
+  #define TOKENS_NONE
+  #include "./token.dats"
+  staload UN = "prelude/SATS/unsafe.sats"
 
 #endif
 
@@ -164,6 +166,26 @@ tok_get_len(tok) =
   | TOKs2e s2e => g1int2int_ssize_int(length(s2e))
   | TOKnil() => 0
   | _ => 1
+
+
+
+fn
+tok_get_len_free(tok: token): int = let
+  val xs = 
+  (
+    case+ tok of 
+    | TOKide ide => g1int2int_ssize_int(length(ide))
+    | TOKint itn => g1int2int_ssize_int(length(itn))
+    | TOKwar war => g1int2int_ssize_int(length(war))
+    | TOKerr err => g1int2int_ssize_int(length(err))
+    | TOKs2e s2e => g1int2int_ssize_int(length(s2e))
+    | TOKnil() => 0
+    | _ => 1
+  )
+  val () = free_token(tok)
+in
+  xs
+end
 
 (* ****** ****** *)
 

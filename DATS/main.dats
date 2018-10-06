@@ -20,9 +20,11 @@
 
 #include "share/atspre_staload.hats"
 
-#define TOKENS_NONE
-
 staload UN = "prelude/SATS/unsafe.sats"
+
+//staload "./../SATS/token.sats"
+
+#define TOKENS_NONE
 
 #include "./mylib/bashstr.dats"
 #include "./mylib/mylib.dats"
@@ -123,6 +125,40 @@ PATS_LM "patscc -tcats -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -latslib -lm -g "
 fn get_whichcc(name: string): string = 
 (
   case+ name of
+    | "my" => "myatscc "
+    | "pc" => "patscc "
+    | "pm" => PATS
+    | "po" => "patsopt "
+    | "gc" => PATS_GC
+    | "tcats" => "patscc -tcats "
+    | "tc" => "patscc -tcats "
+    | "lm" => PATS_LM
+    | "potc" => "patsopt --typecheck --dynamic "
+    | "fly" =>  "patscc -tcats "
+    | "c" => "myatscc "
+    | "tcatsc" => "patscc -tcats "
+
+    | "-my" => "myatscc "
+    | "-pc" => "patscc "
+    | "-pm" => PATS
+    | "-po" => "patsopt "
+    | "-gc" => PATS_GC
+    | "-tcats" => "patscc -tcats "
+    | "-tc" => "patscc -tcats "
+    | "-lm" => PATS_LM
+    | "-potc" => "patsopt --typecheck --dynamic "
+    | "-fly" =>  "patscc -tcats "
+    | "-c" => "myatscc "
+
+
+    | "myatscc" => "myatscc "
+    | "patscc" => "patscc "
+    | "patscc_gc" => PATS
+    | "tcats" => "patscc -tcats "
+    | "patsopt" => "patsopt "
+    | _ =>  "err" // otherwise error
+
+(*
     | "-my" => "myatscc "
     | "-pc" => "patscc "
     | "-pm" => PATS
@@ -141,6 +177,7 @@ fn get_whichcc(name: string): string =
     | "--tcats" => "patscc -tcats "
     | "--patsopt" => "patsopt "
     | _ =>  "err" // otherwise error
+*)
 
     // for future
     // | "-js" => "atscc2js "
@@ -171,147 +208,158 @@ cleanup
     strptr_free(fcmd0);
 )
 
-(*
-      x  :  creates linear list of strings from user arguments
+fn
+is_other_error_type
+(listvt_of_tokens: !toks): bool = let
+    val first_is0 = head_is_pred
+        (listvt_of_tokens, 
+          lam i => not(tok_chr_eq(i, '/')) && not(tok_chr_eq(i, '*')))
+    val n_is0 = toks_n_is_pred_ide 
+        (listvt_of_tokens, 
+          lam i => (tok_ide_eq(i, "tmp") || tok_ide_eq(i, "usr")), 0)
+in
+  first_is0 || n_is0  
+end
 
-      z  :  converts from list_vt to list
-            prepends unsafe to manually free linear list later
-
-     xy  :  create one string from the list of strings
-
-    xy1  :  convert strptr to a string 
-            prepends unsafe to manually free string later
-
-   name  :  option of whichcc -- if not found, exit
-
-whichcc  :  get the corresponding option - if not found, exit
-
-  fcmd0  :  prepends compiler name to args
-            e.g. 
-            command = 'acc -tcats foo.dats'
-            whichcc = 'patscc
-            xy1     = '-tcats foo.dats 
-            fcmd0   = 'patscc -tcats foo.dats'
-
-   cmd   :  complete command to pass to popen
-            prepends unsafe to manually free string later
-
-logname  :  name of file used to put output of command into
-
-      _  :  popen cmd2
-
-   in_f  :  opens file pipe_stream_vt0 writes output to (logname)
-
-   toks  :  error messages tokenized
-
-     xs  :  converts the linear stream to a linear list for subsequent use
-
-*)
 
 fn
-run
-(x: List0_vt(string), name: string): int = let
-  val z = $UN.list_vt2t(x)
-  val xy = stringlst_concat(z)
-  val xy1 = $UN.strptr2string(xy)
+get_show_options(name: string) : (bool, bool, bool) = let
+  //  if second argument true, sets experimental color
+  val color_choice = (if (name = "c" || name = "tcatsc") then true else false)
+  val linenum = (if name = "fly" || name = "-fly" then false else true)
+  val loc = (if name = "fly" || name = "-fly" then false else true)
+in
+  (color_choice, linenum, loc)  
+end
 
-  val whichcc = get_whichcc(name)
-  val () = (if whichcc = "err" then (println!("whichcc error");print_usage(); exit(1) : void) else ())
-
-  val fcmd0 = string_append(whichcc, xy1, " 2>&1 ")
-  val cmd = $UN.strptr2string(fcmd0)
-  // val () = println!("cmd2 = ", cmd2) // print command string produced
-  val logname = ".log" : string
-  //
-  val _ = pipe_stream_vt0(cmd, logname)
-  val in_f = fileref_open_exn(logname, file_mode_r)
-  val toks = tokenize(streamize_fileref_char(in_f))
-  val xs = stream2list_vt(toks)
-  //
-  val first_is0 
-    = head_is_pred
-      (xs, lam i => not(tok_chr_eq(i, '/')) && not(tok_chr_eq(i, '*')))
-  val n_is0
-    = toks_n_is_pred_ide 
-      (xs, lam i => (tok_ide_eq(i, "tmp") || tok_ide_eq(i, "usr")), 0)
-  in
-    ifcase
-    | // defer formatting to gcc output 
-       first_is0 || n_is0  => let
-        val () = (print_c_error(xs); cleanup(in_f, xy, x, fcmd0))
-        val x = unlink(logname);
-      in
-        (* (exit 0) : void *)
-        0
-      end
-    | iseqz xs => let
-        // if 'xs' is empty, cleanup and exit
-        val () = (free_toks(xs); cleanup(in_f, xy, x, fcmd0))
-        val x = unlink(logname);
-      in
-        (* (exit 0) : void *)
-        0
-      end
-  | (*isneqz xs*)_ => let
-      (*
-          xys  :  tokens converted and divided into separate messages 
-          zs   :  the separated messages are then classified 
-               :  the classified messages are then pretty-printed
-               :  last - cleanup and exit with non-zero status
-      *)
-      val xys = tokens_to_messages_free(xs)
-      val zs = classify_toks_free(xys)
-      // if second argument true, sets experimental color
 (*
-      val () = println!("name = ", name)
-      val () = println!("whichcc = ", whichcc)
+            arguments  :  creates linear list of strings from user arguments
+     list_from_listvt  :  converts from list_vt to list
+                          prepends unsafe to manually free linear list later
+  stringptr_from_list  :  create one string from the list of strings
+string_from_stringptr  :  convert strptr to a string 
+                          prepends unsafe to manually free string later
+                 name  :  option of whichcc -- if not found, exit
+              whichcc  :  get the corresponding option - if not found, exit
+    command_stringptr  :  prepends compiler name to args
+      command_string   :  complete command to pass to popen
+                          prepends unsafe to manually free string later
+         logfile_name  :  name of file used to put output of command into
+    popen_return_code  :  popen cmd2
+           input_file  :  opens file logfile_name 
+                          (if empty popen did not write to it.)
+   streamvt_of_tokens  :  error messages tokenized
+     listvt_of_tokens  :  converts the linear stream to a linear list
 *)
+fn
+run
+(arguments: List0_vt(string), name: string): int = let 
+    val list_from_listvt = $UN.list_vt2t(arguments)
+    val stringptr_from_list = stringlst_concat(list_from_listvt)
+    val string_from_stringptr = $UN.strptr2string(stringptr_from_list)
+    val whichcc = get_whichcc(name)
+    val () = ( if whichcc = "err" 
+        then (println!("whichcc error");print_usage(); exit(1) : void))
+    val command_stringptr 
+      = string_append(whichcc, string_from_stringptr, " 2>&1 ")
+    val command_string = $UN.strptr2string(command_stringptr)
+    val logfile_name = ".log" : string
+    //
+    val pipe_return_code = pipe_stream_vt0(command_string, logfile_name)
+    val input_file = fileref_open_exn(logfile_name, file_mode_r)
+    val stream_of_tokens = tokenize(streamize_fileref_char(input_file))
+    val listvt_of_tokens = stream2list_vt(stream_of_tokens)
+    //
+  val return_code = (  
+    ifcase
+    | is_other_error_type(listvt_of_tokens)  => 
+        let val () = print_c_error(listvt_of_tokens) in 1 end
+    | iseqz listvt_of_tokens =>
+        let val () = free_toks(listvt_of_tokens) in 0 end
+    | (*isneqz xs*)_ => let
+        val (color_choice, linenum, loc) = get_show_options(name)
+        //  tokens converted and divided into separate messages
+        val messages = tokens_to_messages_free(listvt_of_tokens)
+        //  the separated messages are then classified 
+        val classified_messages = classify_toks_free(messages)
+        //  the classified messages are then pretty-printed
+        val () =
+        print_classified_free(classified_messages, color_choice, linenum, loc)
+      in 1 end
+    )
+  val () //  cleanup and exit with non-zero status
+    = cleanup(input_file, stringptr_from_list, arguments, command_stringptr)
+  val unlink_return_code = unlink(logfile_name);
 
-      (* val color_choice = false //(if name = "-fly" then false else true) *)
-      val color_choice = (if name = "-c" then true else false)
-      val linenum = (if name = "-fly" then false else true)
-      val () = print_classified_free(zs, color_choice, linenum) //false)
-      val () = cleanup(in_f, xy, x, fcmd0)         
-      val x = unlink(logname);
-    in
-      (* (exit(1)): void // exit :: error *)
-      1
-    end
-  end
+in
+  return_code
+end
 
 
-implement main {n} (argc, argv) = res
-where 
-{
-  val () = (if argc <= 2 then (print_usage(); exit(1)))
-  val x = ( let
-    fun
-    loop(argc: int n, argv: !argv(n), i: natLte(n), res: List0_vt(string))
-    : List0_vt(string) 
-      =
-        if argc > i then let
-            val res2 = cons_vt(argv[i], res)
-            val res2 = cons_vt(" ", res2)
-          in
-            loop(argc, argv, i+1, res2)
-          end
-        else list_vt_reverse(res)
+(* ****** ****** *)
+
+
+(*
+// instead of fix
+val x =  ( let
+  fun
+    loop
+    (argc: int n, argv: !argv(n), i: natLte(n), res: List0_vt(string))
+    : List0_vt(string) =
+        ifcase
+        | argc > i => loop(argc, argv, i+1, cons_vt(" ", cons_vt(argv[i], res)))
+        | (* else *)_ => list_vt_reverse(res)
       in
           let val () = assertloc(argc >= 2)
           in
-            loop(argc, argv, 2, nil_vt())
+            loop(argc, argv, 1, nil_vt())
           end
       end
+)
+*)
+
+
+(* ****** ****** *)
+
+
+implement
+main 
+{n} (argc, argv) = res where 
+{
+  val x = ( 
+    fix loop 
+    (ac: int n, av: !argv(n), i: natLte(n), res: List0_vt(string))
+    : List0_vt(string) =>
+        ifcase
+        | ac > i => loop(ac, av, i+1, cons_vt(" ", cons_vt(av[i], res)))
+        | (*else*)_ => list_vt_reverse(res)
+
+  )(argc, argv, 1, nil_vt())
+
+  val err =   // response to argc = 0 .. 
+  (lam () => println!( "... demons may fly out of my nose..."))
+
+  val 
+  res = (
+    case+ argc of 
+    | 1 => let val () = (free(x); print_usage()) in 1 end
+    | 2 => run(x, "c") 
+    | 3 => let
+        val name = argv[1] : string
+        val filename = argv[2] : string
+      in
+        run(x, name)
+      end
+    | 0 => let val () = (free(x); err(); print_usage()) in 9 end 
+    | (* >= 4 *)_ => let
+        val () = assertloc(argc >= 4)
+        val name = argv[1] : string
+      in  
+        run(x, name)
+      end
   )
-  val name = (if argc >= 2 then argv[1] else "~1"): string
-  val () = (if name = "~1" then (println!("argc < 2"); print_usage(); exit(1) : void) else ())
-
-  val filename = (if argc >= 3 then argv[2] else "~1"): string
-  val () = (if name = "~1" then (println!("argc < 3"); print_usage(); exit(1) : void) else ())
-
-  (* val () = println!("filename = ", filename, "\n\n") *)
-  val res = run(x, name)
 }
+
 
 (* ****** ****** *)
 

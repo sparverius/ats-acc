@@ -2,7 +2,8 @@
 
 files=( "./TEST/cfail.dats"
 	"./TEST/atsgu1.dats"
-	"./TEST/fail2.dats"
+	# "./TEST/fail2.dats"
+	"./TEST/list0_tests.dats"
 	"./TEST/show6.dats"
       )
 
@@ -99,7 +100,7 @@ compile_code_with_acc() {
     printf "./acc -tcats $1 ..."
     print_color_close
 
-    ./acc -tcats "${files[$c]}"
+    ./acc tcatsc "${files[$c]}"
 
     echo
 }
@@ -234,10 +235,10 @@ show_patscc_vs_acc_tests() {
     do  
 	print_test "$c"
 	echo
-	echo "File: ${files[$c]}"
-	source_code_from_file=$(<"${files[$c]}")
-	print_color_with_string "$RED" "$source_code_from_file"
-	echo
+	# echo "File: ${files[$c]}"
+	# source_code_from_file=$(<"${files[$c]}")
+	# print_color_with_string "$RED" "$source_code_from_file"
+	# echo
 	compile_code_with_patscc "${files[$c]}"
 	echo
 	compile_code_with_acc "${files[$c]}"
@@ -245,9 +246,9 @@ show_patscc_vs_acc_tests() {
 }
 
 main() {
-    show_patscc_vs_acc_tests
-    echo
     show_valgrind_test
+    echo
+    show_patscc_vs_acc_tests
     echo
     print_end_all_test
 }

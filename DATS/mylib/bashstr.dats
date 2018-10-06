@@ -7,7 +7,10 @@
 "share\
 /atspre_staload_libats_ML.hats"
 *)
+
 (* ****** ****** *)
+
+#define BASHSTR
 
 #define reset_all "0" 
 
@@ -106,6 +109,8 @@ print_a_color
   val name = (
     case+ colorname of
     | "reset_all" => reset_all
+    | "reset_dim" => reset_dim
+    | "default" => default_foreground
     | "bold" => bold
     | "dim" => dim
     | "underline" => underline
