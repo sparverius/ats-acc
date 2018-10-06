@@ -170,11 +170,11 @@ The error messages returned by current ATS compiler format:
 
 command: patscc -tcats ./TEST/cfail.dats
 results:
-<pre>
+<p>
 .../TEST/cfail.dats: 570(line=35, offs=5) -- 610(line=35, offs=45): error(3): unsolved constraint: C3NSTRprop(C3TKmain(); S2Eeqeq(S2Eapp(S2Ecst(sub_int_int); S2Evar(r$14475$14476(23038)), S2Evar(r$14479$14480(23042))); S2Eapp(S2Ecst(add_int_int); S2Evar(r$14475$14476(23038)), S2Evar(r$14479$14480(23042)))))
 typechecking has failed: there are some unsolved constraints: please inspect the above reported error message(s) for information.
 exit(ATS): uncaught exception: _2home_2hwxi_2Research_2ATS_2dPostiats_2src_2pats_error_2esats__FatalErrorExn(1025)
-</pre>
+</p>
 
 --------------------------------------------
 
