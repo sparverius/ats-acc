@@ -225,22 +225,20 @@ print_sorts
   // par2 ... the actual sort
   val (actual_sort, rest2) = peek_square_list_osq(t3) 
   val () = (free_toks(rest2))
-  (* val sgn = "  <~  " *)
-//  val sgn = "  ~>  "
-  val sgn = "  <=  "
+  //  val sgn = "  ~>  "
+  val sgn = "  =>  "
 in 
   (
-    print_ident3;
-    print_toks_color_err(error, color);
-    // print_toks_free_nonewln(h0);
-    print " ";
-    (* print_error(error, color); *)
+    print_error(error, color);
     print_toks_free_nonewln(mismatch);
-    nl;
-    print_ident6_nl;
+    print_after_message("");
+    print_actual(color);
     simplify_print(actual_sort, color);
-    print_str_color_sgn(sgn, color);
-    simplify_print(needed_sort, color)
+    print_after;
+    print_needed(color);
+    (* print_str_color_sgn(sgn, color); *)
+    simplify_print(needed_sort, color);
+    print_after_all
   ) 
 end
 

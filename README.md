@@ -8,7 +8,7 @@ Pretty-printer/wrapper for the ats compiler/typechecker
 
 ## Motivation
 
-"...one can drastically reduce the need for debugging by making extensive use of types in programming." (http://ats-lang.sourceforge.net/DOCUMENT/ATS2FUNCRASH/HTML/HTMLTOC/x41.html)
+"...one can drastically reduce the need for debugging by making extensive use of types in programming." ([source](http://ats-lang.sourceforge.net/DOCUMENT/ATS2FUNCRASH/HTML/HTMLTOC/x41.html))
 
 
 Understanding the typechecking errors though, can be quite difficult. 
