@@ -29,14 +29,6 @@ typedef loc0 = (int, int, int, int)
 fn
 print_location
 (xs: !List0_vt(char)): void 
-(*   = let  *)
-(*     implement(env) *)
-(*     list_vt_foreach$fwork<char><env>(c,env)  *)
-(*       = fprint(stdout_ref, c) *)
-(* in *)
-(*   list_vt_foreach(xs) *)
-(* end *)
-
 
 fn
 print_location_colored

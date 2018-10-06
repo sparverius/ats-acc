@@ -14,8 +14,9 @@
 
 #endif
 
-(* #include "./pprint.dats" *)
+
 staload "./../SATS/simplify_print.sats"
+
 
 (*
   Currently handles only a subset of error expressions from "ATS2/src/pats_staexp2.sats"
@@ -29,9 +30,6 @@ staload "./../SATS/simplify_print.sats"
        [n]  :  existentially qualified type n (S2Eexi)
        inf  :  intinf (S2Eintinf)
       uni.  :  universally quantified type (S2Euni)
-
-   x ~~> y  :  x should be y 
-   x ~?> y  :  x should (most likely) be y    
       
    "g0int"  :  "g0int_t0ype"
  "g0float"  :  "g0float_t0ype"
@@ -68,11 +66,9 @@ get_simplified_idestring
   | "strnptr_addr_int_vtype" =>  "strnptr"
   | "list_t0ype_int_type" =>  "list"
   | "list_vt0ype_int_vtype" =>  "list_vt"
-  (*
-  | "sub_int_int" => "- "
-  | "add_int_int" => "+ "
-  *)
+  | "list0_t0ype_type" => "list0"
   | _ => idestring
+
 
 
 implmnt(*{}*)
@@ -104,6 +100,7 @@ just_print
   print_token0_free(x0); 
   (if color then prcc);            
 )
+
 
 implmnt(*{}*)
 simplify_whats_inside
@@ -148,41 +145,57 @@ simplify_idestring
       strnptr_free(i)
       )
     end
-//
+
 
 (* ****** ****** *) // print simplified S2E
+
 
 (* 
   from *** ATS2/src/pats_staexp2.sats *** (line 477-557 and ~559-~582) 
   datatype s2exp_node
 *)
+
+
     (*
     | S2Eint of int // integer
     *)
+
 implmnt(*{}*)
 simplify_S2Eint
 (x0: token, xs0: toks): void = generic_simplify(x0, xs0, "")
+
+
     (*
     | S2Eintinf of intinf // integer of flex precision
     *)
+
 implmnt(*{}*)
 simplify_S2Eintinf
 (x0: token, xs0: toks): void = generic_simplify(x0, xs0, "inf ")
+
+
     (*
     | S2Efloat of string // static floating-points
     *)
+
 implmnt(*{}*) 
 simplify_S2Efloat
 (x0: token, xs0: toks): void = generic_simplify(x0, xs0, "")
+
+
     (*
     | S2Estring of string // static string constants
     *)
+
 implmnt(*{}*) 
 simplify_S2Estring
 (x0: token, xs0: toks): void = generic_simplify(x0, xs0, "")
+
+
     (*
     | S2Ecst of s2cst // constant
     *)
+
 implmnt(*{}*)
 simplify_S2Ecst
 (x0: token, xs0: toks): (toks, toks) = let
@@ -204,21 +217,30 @@ simplify_S2Eext
 in
   expression
 end
+
+
     (*
     | S2Eextype of (string(*name*), s2explstlst) // external type
     *)
+
 implmnt(*{}*)
 simplify_S2Eextype
 (x0: token, xs0: toks): (toks) = simplify_S2Eext(x0, xs0)
+
+
     (*
     | S2Eextkind of (string(*name*), s2explstlst) // external tkind
     *)
+
 implmnt(*{}*)
 simplify_S2Eextkind
 (x0: token, xs0: toks): (toks) = simplify_S2Eext(x0, xs0)
+
+
     (*
     | S2Evar of s2var // universal variable
     *)
+
 implmnt(*{}*)
 simplify_S2Evar
 (x0: token, xs0: toks): (toks, toks, toks) = let
@@ -234,9 +256,12 @@ simplify_S2Evar
 in
   (par2, rest3, rest)
 end
+
+
     (*
     | S2EVar of s2Var // existential variable
     *)
+
 implmnt(*{}*)
 simplify_S2EVar(x0, xs0) = let
   val (expression, rest) = simplify_whats_inside(xs0)
@@ -244,19 +269,24 @@ simplify_S2EVar(x0, xs0) = let
 in
   expression
 end
+
+
     (*
     | S2Ehole of s2hole // it used to form contexts
     *)
-//
+
+
     (*
     | S2Edatcontyp of (* unfolded datatype *)
         (d2con, s2explst) (* constructor and types of arguments *)
     *)
-//
+
+
     (*
     | S2Edatconptr of (* unfolded datatype *)
         (d2con, s2exp, s2explst) (* constructor and addrs of arguments *)
     *)
+
 (*
 implmnt(*{}*)
 simplify_S2Edatconptr
@@ -273,9 +303,12 @@ in
   (h1, t1)
 end
 *)
+
+
     (*
     | S2Eat of (s2exp, s2exp) // for at-views
     *)
+
 implmnt(*{}*)
 simplify_S2Eat
 (x0: token, xs0: toks): toks = let
@@ -285,25 +318,32 @@ simplify_S2Eat
 in
   rest
 end
+
+
     (*
     | S2Esizeof of (s2exp) // for sizes of types
     *)
-//
+
+
     (*
     | S2Eeff of (s2eff) // effects
     *)
-//
+
+
     (*
     | S2Eeqeq of (s2exp, s2exp) // generic static equality
     *)
-//
+
+
     (*
     | S2Eproj of (s2exp(*addr*), s2exp(*type*), s2lablst) // projection
     *)
-//
+
+
     (*
     | S2Eapp of (s2exp, s2explst) // static application
     *)
+
 implmnt(*{}*)
 simplify_S2Eapp
 (x0: token, xs0: toks): (toks, toks, toks, toks, toks) = let
@@ -326,64 +366,18 @@ simplify_S2Eapp
 in
   (h0, par, par1, t00, par1rest)
 end
+
+
     (*
     | S2Elam of (s2varlst, s2exp) // static abstraction
     *)
-//
+
+
     (*
     | S2Efun of 
       ( // function type
         funclo, int(*lin*), s2eff, int(*npf*), s2explst(*arg*), s2exp(*res*))
     *)
-(*
-    ((bool) -> bool, string) -> int) -> int
-
-      S2Efun
-      (
-        FUN; lin=0; eff=S2EFFset(1); npf=-1; 
-        S2Efun
-        (
-          FUN; lin=0; eff=S2EFFset(1); npf=-1; 
-          S2Efun
-          (
-            FUN; lin=0; eff=S2EFFset(1); npf=-1; 
-            S2Ecst(bool); 
-(*->*)      S2Ecst(bool)
-          ), 
-          S2Ecst(string); -> S2Ecst(int)
-        ); 
-(*->*)  S2Ecst(int)
-      )
-      : S2RTbas(S2RTBASimp(0; type))
-*)
-
-//(bool, string, ((bool) -> bool, string) -> int) -> int
-//(bool, string, ((bool, string) -> (bool)) -> (int)) -> (int)  : type
-(*
-
-S2Efun
-(
-  FUN; lin=0; eff=S2EFFset(1); npf=-1; 
-  S2Ecst(bool_t0ype), 
-  S2Ecst(string_type), 
-  S2Efun
-  (
-    FUN; lin=0; eff=S2EFFset(1); npf=-1; 
-    S2Efun
-    (
-      FUN; lin=0; eff=S2EFFset(1); npf=-1; 
-      S2Ecst(bool); 
-      S2Ecst(bool)
-    ), 
-    S2Ecst(string); 
-  ->S2Ecst(int)
-  ); 
-->S2Ecst(int)
-
-)
-: S2RTbas(S2RTBASimp(0; type))
-*)
-
 
 implmnt(*{}*)
 simplify_S2Efun
@@ -392,6 +386,8 @@ simplify_S2Efun
   val () = free_token(x0)
   val rest = drop_exn_free(xs, 0)
   val (ftype, rest) = takeskip_until_free(rest, lam i => is_sco(i))
+  val ftype = take_until_free2(ftype, lam i => not(is_ide(i)))
+  
   val rest = drop_exn_free(rest, 1)
   val (lin, rest) = takeskip_until_free(rest, lam i => is_sco(i))
   val rest = drop_exn_free(rest, 1)
@@ -405,10 +401,11 @@ simplify_S2Efun
 
   val (afun, annotate) = 
     takeskip_until_free(rest, lam i => is_col(i))
-  val afun = list_vt_reverse(afun)
-  val afun = drop_exn_free(afun, 0)
-  val (rev_return_type, rev_afun) = 
-    takeskip_until_free(afun, lam i => is_sco(i) || tok_chr_eq(i, ','))
+  val rev_afun = list_vt_reverse(afun)
+  val rev_afun = skip_while_free(rev_afun, lam i => is_spc(i) || is_nwl(i))
+  val (afun_head, rev_afun) = drop_head_tup(rev_afun) // drop trailling
+  val () = free_token(afun_head)
+  val (rev_return_type, rev_afun) = takeskip_until_in_free_rev(rev_afun, lam i => is_sco(i))
 
   val (rev_item, rev_return_type, rev_afun) = 
     (
@@ -422,52 +419,43 @@ simplify_S2Efun
       else
         (nil_vt(), rev_return_type, rev_afun)
     ) : (toks, toks, toks)
+
   val item = list_vt_reverse(rev_item)
   val afun = list_vt_reverse(rev_afun)
   val return_type = list_vt_reverse(rev_return_type)
 
-(*
-  val () = println!()
-  val () = println!()
-  val () = print "item = "
-  val () = print_toks(item)
-  val () = println!()
-  val () = print "afun = "
-  val () = print_toks(afun)
-  val () = println!()
-  val () = print "return_type = "
-  val () = print_toks(return_type)
-  val () = println!("\n\n")
-*)
-
-  val return_type = drop_exn_free(return_type, 0)
-  val (return_type, remove) = peek_paren_list3(return_type)
-  val () = free_toks(remove)
-
+  val return_type = skip_while_free(return_type, lam i => is_sco(i) || is_spc(i))
   val annotate 
     = skip_while_free(annotate, lam i => is_col(i) || is_spc(i))
 in
   (ftype, afun, item, return_type, annotate)
 end
+
+
     (*
     | S2Emetfun of (stampopt, s2explst, s2exp) // metricked function
     *)
-//
+
+
     (*
     | S2Emetdec of (s2explst(*met*), s2explst(*metbound*)) // strictly decreasing
     *)
-//
+
+
     (*
     | S2Etop of (int(*knd*), s2exp) // knd: 0/1: topization/typization
     *)
-//
+
+
     (*
     | S2Ewithout of (s2exp) // for a component taken out by the [view@] operation
     *)
-//
+
+
     (*
     | S2Etyarr of (s2exp (*element*), s2explst (*dimension*))
     *)
+
 implmnt(*{}*)
 simplify_S2Etyarr
 (x0: token, xs0: toks): (toks, toks) = let
@@ -485,10 +473,13 @@ simplify_S2Etyarr
 in
   (to_simplify, rest)
 end
+
+
     (*
     | S2Einvar of (s2exp) // it is a special type for handling type unification
             // HX: note that [S2Einvar] is *not* related to [S1Einvar];
     *)
+
 implmnt(*{}*)
 simplify_S2Einvar
 (x0: token, xs0: toks): toks = let
@@ -498,9 +489,12 @@ simplify_S2Einvar
 in
   s0  
 end
+
+
     (*
     | S2Etyrec of (tyreckind, int(*npf*), labs2explst) // tuple and record
     *)
+
 implmnt(*{}*) 
 simplify_S2Etyrec
 (x0: token, xs0: toks): toks = let
@@ -524,10 +518,13 @@ simplify_S2Etyrec
 in
   next
 end
+
+
     (*
     | S2Eexi of ( // exist. quantified type
               s2varlst(*vars*), s2explst(*props*), s2exp(*body*) )
     *)
+
 implmnt(*{}*)
 simplify_S2Eexi(x0, xs0): (toks, toks) = let
   val r0 = drop_exn_free(xs0, 0) // i.e. 'S2Eexi('
@@ -584,10 +581,13 @@ simplify_S2Eexi(x0, xs0): (toks, toks) = let
 in
   (res2, s6)
 end
+
+
     (*
     | S2Euni of ( // universally quantified type
              s2varlst(*vars*), s2explst(*props*), s2exp(*body*))
     *)
+
 implmnt(*{}*)
 simplify_S2Euni
 (x0: token, xs0: toks): (toks, toks, toks) = let
@@ -604,22 +604,28 @@ simplify_S2Euni
 in
   (t0, t1, t2)
 end
+
+
     (*
     | S2Erefarg of (int(*0/1:val/ref*), s2exp) (* !/&: call-by-val/ref *)
     *)
-//
+
+
     (*
     | S2Evararg of (s2exp) // variadic argument type
     *)
-//
+
+
     (*
     | S2Ewthtype of (s2exp, wths2explst) // the result part of a fun type
     *)
-//
+
+
     (*
     | S2Eerrexp of ((*void*)) 
                 // HX: placeholder for indicating error or something else
     *)
+
         // see simplify
 (* end of datatype s2exp_node *)
 
@@ -666,7 +672,7 @@ datatype s2rt
 implmnt(*{}*)
 simplify_S2RTbas
 (x0: token, xs0: toks) : (toks, toks) = let
-  //    datatype s2rt = | S2RTbas of s2rtbas (* base sort *)
+  // datatype s2rt = | S2RTbas of s2rtbas (* base sort *)
   val all = skip_until_in_free(xs0, lam i => is_sco(i))
   val all = drop_exn_free(all, 0)
   (* val res = take_until_free2(all, lam i => is_cpr(i)) *)
@@ -731,7 +737,6 @@ auxmain(xs1: toks): void =
         in 
           auxmain(expression) 
         end
-
     | tok_s2e_eq(x0, "S2Evar") => let 
           val (par2, rest3, rest) = simplify_S2Evar(x0, xs0)
         in 
@@ -742,18 +747,18 @@ auxmain(xs1: toks): void =
       in
         auxmain(res)
       end
- // | tok_s2e_eq(x0, "S2Ehole") =>
- // | tok_s2e_eq(x0, "S2Edatacontyp") =>
- (* | tok_s2e_eq(x0, "S2Edatconptr") => let
+     // | tok_s2e_eq(x0, "S2Ehole") =>
+     // | tok_s2e_eq(x0, "S2Edatacontyp") =>
+     (* | tok_s2e_eq(x0, "S2Edatconptr") => let
         val (h1, t1) = simplify_S2Edatconptr(x0, xs0)
         in
           auxmain(h1); print "("; auxmain(t1); print " )";
         end *)
     | tok_s2e_eq(x0, "S2Eat") => auxmain(simplify_S2Eat(x0, xs0)) // 08-07
- // | tok_s2e_eq(x0, "S2Esizeof") =>
- // | tok_s2e_eq(x0, "S2Eeff") =>
- // | tok_s2e_eq(x0, "S2Eeqeq") =>
- // | tok_s2e_eq(x0, "S2Eproj") =>
+     // | tok_s2e_eq(x0, "S2Esizeof") =>
+     // | tok_s2e_eq(x0, "S2Eeff") =>
+     // | tok_s2e_eq(x0, "S2Eeqeq") =>
+     // | tok_s2e_eq(x0, "S2Eproj") =>
     | tok_s2e_eq(x0, "S2Eapp") => let
         val (h0, par, par1, t00, par1rest) = simplify_S2Eapp(x0, xs0)
       in
@@ -763,32 +768,32 @@ auxmain(xs1: toks): void =
           print ")"; auxmain(t00); auxmain(par1rest);
         )
       end
- // | tok_s2e_eq(x0, "S2Elam") =>
+     // | tok_s2e_eq(x0, "S2Elam") =>
     | tok_s2e_eq(x0, "S2Efun") => let
           val (ftype, afun, item, return_type, annotate) 
             = simplify_S2Efun(x0, xs0)
         in
           (
-            (* print_toks_free_nonewln(ftype); *) // could optionally print 'FUN' or 'CLO'
-            (* print "  (";  *)
-            free_toks(ftype);
+            (* free_toks(ftype); *)
             print ("(");
             auxmain(afun); 
-
             print ") -> ("; auxmain(return_type); 
             (if isneqz item then (print "),"; auxmain(item)) else (print ")"; free_toks(item)));
-            (* (if iseqz item then  *)
+            // experimental
+            print "  :: [ "; print_toks_free_nonewln(ftype); 
+            //
             (
               if isneqz(annotate) then 
                 (print("  : "); auxmain(annotate))
               else (free_toks(annotate))
-            )
+            );
+            print " ]"
           )
         end
- // | tok_s2e_eq(x0, "S2Emetfun") =>
- // | tok_s2e_eq(x0, "S2Emetdec") =>
- // | tok_s2e_eq(x0, "S2Etop") =>
- // | tok_s2e_eq(x0, "S2Ewithout") =>
+     // | tok_s2e_eq(x0, "S2Emetfun") =>
+     // | tok_s2e_eq(x0, "S2Emetdec") =>
+     // | tok_s2e_eq(x0, "S2Etop") =>
+     // | tok_s2e_eq(x0, "S2Ewithout") =>
     | tok_s2e_eq(x0, "S2Etyarr") => let 
           val (to_simplify, rest) = simplify_S2Etyarr(x0, xs0)
         in
@@ -815,9 +820,9 @@ auxmain(xs1: toks): void =
         print "uni. "; 
         auxmain(t0); auxmain(t1); auxmain(t2)
       end
- // | tok_s2e_eq(x0, "S2Evararg") =>
- // | tok_s2e_eq(x0, "S2Ewthtype") =>
- // | tok_s2e_eq(x0, "S2Erefarg") =>
+     // | tok_s2e_eq(x0, "S2Evararg") =>
+     // | tok_s2e_eq(x0, "S2Ewthtype") =>
+     // | tok_s2e_eq(x0, "S2Erefarg") =>
     | tok_s2e_eq(x0, "S2Eerrexp") => 
         (
           (if color then (print_a_color("dim")));
@@ -827,25 +832,26 @@ auxmain(xs1: toks): void =
           (if color then prcc)
         )
     (* end of [s2exp_node] *)
+
     (* datatype s2rtbas = *)
- // | tok_s2e_eq(x0, "S2RTBASpre") =>
- // | tok_s2e_eq(x0, "S2RTBASimp") =>
- // | tok_s2e_eq(x0, "S2RTBASdef") =>
+     // | tok_s2e_eq(x0, "S2RTBASpre") =>
+     // | tok_s2e_eq(x0, "S2RTBASimp") =>
+     // | tok_s2e_eq(x0, "S2RTBASdef") =>
+
     (* datatype s2rt = *)
     | tok_s2e_eq(x0, "S2RTbas") => let 
           val (res, rest) = simplify_S2RTbas(x0, xs0)
         in 
           auxmain(res); auxmain(rest)
         end
-    | tok_s2e_eq(x0, "S2RTfun") => (free_token(x0); print "function sort "; auxmain(xs0))
- // | tok_s2e_eq(x0, "S2RTtup") =>
- // | tok_s2e_eq(x0, "S2RTVar") =>
- // | tok_s2e_eq(x0, "S2RTerr") =>
 
+    | tok_s2e_eq(x0, "S2RTfun") => (free_token(x0); print "function sort "; auxmain(xs0))
+     // | tok_s2e_eq(x0, "S2RTtup") =>
+     // | tok_s2e_eq(x0, "S2RTVar") =>
+     // | tok_s2e_eq(x0, "S2RTerr") =>
 
     (* Other - fallthrough *)
     | _ => (
-        // println!(x0, " was not found in simplify... "); 
         print_toks_free_nonewln(cons_vt(x0, xs0))
       )
 in

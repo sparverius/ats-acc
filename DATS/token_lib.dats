@@ -1,7 +1,9 @@
+
 #ifndef TOKENS_NONE
 
-#include "./token.dats"
-staload UN = "prelude/SATS/unsafe.sats"
+  #define TOKENS_NONE
+  #include "./token.dats"
+  staload UN = "prelude/SATS/unsafe.sats"
 
 #endif
 

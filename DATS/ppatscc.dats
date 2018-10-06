@@ -1,5 +1,3 @@
-(* ****** ****** *)
-
 #ifndef TOKENS_NONE
 
   #define TOKENS_NONE
@@ -20,8 +18,6 @@
 
 #endif
 
-
-(* ****** ****** *) 
 
 #include "./print_location.dats"
 
@@ -154,7 +150,7 @@ in
   ifcase 
   | (isneqz x0 && isneqz x1) => (
       (if color then prc(magenta));
-      (* print_toks_free_nonewln(x0);  *)
+      // print_toks_free_nonewln(x0);
       print_toks(x0); // for the below to print location
       print ": "; 
       (if color then prcc);
@@ -244,85 +240,11 @@ show_first2
 
 (* ****** ****** *)
 
+
 fn
 print_classified_free
 (xs: errtups, color: bool, lineno: bool, loc: bool): void = let
-  fun
-  aux (xs: errtups, ys: toks, i: int): void =
-    case+ xs of
-    | ~cons_vt(x, xs) => let
-        val (x0, x1, x2) = (x.0, x.1, x.2)
-        val y = get_loc(x1)
-        val name = get_errkind_string(x2)
-
-        val y_ys = (if toks_eq_toks(y, ys) then i else i+1): int
-        (* val () = println!() *)
-        (* val () = println!(" i = ", y_ys) *)
-      in
-          (
-            if y_ys >= 5 then 
-            (
-              free_toks(x0); free_toks(x1); free_errkind(x2); free_toks(y); 
-              free_errtups(xs); free_toks(ys); nl
-            )
-            else (
-              show_first2
-              (y, ys, x0, x1, x2, color, lineno, loc);
-              (* show_errkind(x2);  *)// optional to show errorkind string
-              (if name != "ERRlast" then nl);
-              print_errkind_single(x2, color); 
-              nl;
-              aux(xs, y, y_ys)
-            )
-          )
-      end
-    | ~nil_vt() => (free_toks(ys); nl)
-
-in
-  aux(xs, nil_vt(), 0)
-end
-
-
-fn
-print_classified_free_n
-(n: int, xs: errtups, color: bool, lineno: bool, loc: bool): void = let
-  fun
-  aux (xs: errtups, ys: toks, i: int): void =
-    case+ xs of
-    | ~cons_vt(x, xs) => let
-        val (x0, x1, x2) = (x.0, x.1, x.2)
-        val y = get_loc(x1)
-        val name = get_errkind_string(x2)
-        val y_ys = (if toks_eq_toks(y, ys) then i else i+1): int
-      in
-          (
-            if y_ys >= n+1 then 
-            (
-              free_toks(x0); free_toks(x1); free_errkind(x2); 
-              free_toks(y); free_errtups(xs); free_toks(ys)
-            )
-            else (
-              show_first2
-              (y, ys, x0, x1, x2, color, lineno, loc);
-              (* show_errkind(x2);  *)// optional to show errorkind string
-              (if name != "ERRlast" then nl);
-              print_errkind_single(x2, color); 
-              nl;
-              aux(xs, y, y_ys)
-            )
-          )
-      end
-    | ~nil_vt() => (free_toks(ys); nl)
-
-in
-  aux(xs, nil_vt(), 0)
-end
-
-
-fn
-print_classified_free
-((* i: int,  *)xs: errtups, color: bool, lineno: bool, loc: bool): void = let
-
+  val number_of_messages = 500
   fun
   aux (xs: errtups, ys: toks, i: int): void =
     case+ xs of
@@ -333,19 +255,19 @@ print_classified_free
         val y_ys = (if toks_eq_toks(y, ys) || name = "ERRshow" then i else i+1): int
       in
           (
-            if y_ys >= 11 then 
+            if y_ys >= number_of_messages + 1 then 
             (
               free_toks(x0); free_toks(x1); free_errkind(x2); 
               free_toks(y); free_errtups(xs); free_toks(ys);
-              nl
+              nl // introduced before 'print_after_all'
             )
             else (
               show_first2
               (y, ys, x0, x1, x2, color, lineno, loc);
-              (* show_errkind(x2);  *)// optional to show errorkind string
+              // show_errkind(x2);// optional to show errorkind string
               (if name != "ERRlast" then nl);
               print_errkind_single(x2, color); 
-              nl;
+
               aux(xs, y, y_ys)
             )
           )

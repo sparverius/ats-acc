@@ -20,11 +20,11 @@
 
 #include "share/atspre_staload.hats"
 
-#define TOKENS_NONE
-
 staload UN = "prelude/SATS/unsafe.sats"
 
 //staload "./../SATS/token.sats"
+
+#define TOKENS_NONE
 
 #include "./mylib/bashstr.dats"
 #include "./mylib/mylib.dats"

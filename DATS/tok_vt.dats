@@ -2,6 +2,7 @@
 
 #ifndef TOKENS_NONE
 
+  #define TOKENS_NONE
   #include "./token.dats"
   staload UN = "prelude/SATS/unsafe.sats"
   #include "./token_lib.dats"
@@ -1026,6 +1027,76 @@ peek_paren_list3(xs) = let
 in
   auxmain(xs, 1, nil_vt()) // should start from after first paren
 end    
+
+
+fn
+peek_paren_list_for_fun
+(xs: toks): (toks, toks) = let
+  val (head, xs) = takeskip_until_free(xs, lam i => is_opr(i))
+  fun
+  auxmain(head: toks, xs: toks, np: int, res: toks): (toks, toks) = 
+    case+ xs of
+    | ~nil_vt() => (list_vt_append(head, list_vt_reverse(res)), nil_vt())
+    | ~cons_vt(x, xs) =>
+      ifcase
+        | np = 0 => (list_vt_append(head, list_vt_reverse(res)), cons_vt(x, xs))
+        | is_opr(x) => auxmain(head, xs, np+1, cons_vt(x, res))
+        | is_cpr(x) => let
+            val rest = (
+              if np - 1 = 0 then
+                let
+                  val () = free_token(x)
+                in 
+                  res
+                end
+              else
+                cons_vt(x, res)
+           ) : toks
+          in
+            auxmain(head, xs, np-1, rest)
+          end
+        | (*else*)_ => auxmain(head, xs, np, cons_vt(x, res))
+in
+  auxmain(head, xs, 1, nil_vt())
+end    
+
+fn
+peek_paren_list_reverse
+(xs: toks): (toks, toks) = let
+  (* val (head, xs) = takeskip_until_free(xs, lam i => is_opr(i)) *)
+  fun
+  auxmain(xs: toks, np: int, res: toks): (toks, toks) = 
+    case+ xs of
+    | ~nil_vt() => (list_vt_reverse(res), nil_vt())
+    | ~cons_vt(x, xs) =>
+      ifcase
+        | np = 0 => (list_vt_reverse(cons_vt(x, res)), xs)
+        | is_cpr(x) => auxmain(xs, np+1, cons_vt(x, res))
+        | is_opr(x) => auxmain(xs, np-1, cons_vt(x, res))
+        | (*else*)_ => auxmain(xs, np, cons_vt(x, res))
+in
+  auxmain(xs, 1, list_vt_sing(TOKcpr(')')))
+end    
+
+
+fn
+takeskip_until_in_free_rev
+(xs: toks, pred: !(!token) -> bool): (toks, toks) = let
+  fun
+  auxmain(xs: toks, res: toks, i: int): (toks, toks) = 
+    case+ xs of
+    | ~nil_vt() => (list_vt_reverse(res), nil_vt())
+    | ~cons_vt(x1, xs1) => 
+      ifcase
+      | is_cpr(x1) => auxmain(xs1, cons_vt(x1, res), i+1)
+      | is_opr(x1) => auxmain(xs1, cons_vt(x1, res), i-1)
+      | pred(x1) && i = 0 
+        => (list_vt_reverse(cons_vt(x1, res)), xs1)
+      | _ 
+        => auxmain(xs1, cons_vt(x1, res), i)
+in
+  auxmain(xs, nil_vt(), 0)
+end
 
 
 (* ****** ****** *)

@@ -14,9 +14,6 @@
 staload "./../SATS/classify_toks.sats"
 
 
-(* ****** ****** *)
-
-
 implement
 tokens_to_messages_free(xs) = let
   fun
@@ -180,7 +177,7 @@ when_err(xs) = let
     ifcase
     | tok_ide_eq(y0, "parsing") => @(x0, x1, ERRparse(x2))
     | tok_ide_eq(y0, "lexing")  => @(x0, x1, ERRlexing(x2))
-    | tok_int_eq(y0, "2")       => parse_two((x0,x1,x2))//@(x0, x1, ERRexit2(x2))
+    | tok_int_eq(y0, "2")       => parse_two((x0,x1,x2))
     | tok_int_eq(y0, "3")       => parse_three((x0,x1,x2))
     | (*else*)_                 => @(x0, x1, ERRother(x2)) 
   ): errtup
@@ -274,12 +271,9 @@ classify_toks_free(xs) = let
                 ifcase
                 | head_is_pred(x0, lam i => tok_chr_eq(i, '/')) =>
                     aux(xs, cons_vt(@(x0, x1, ERRother(x2)), res)) 
-                | _ => 
-                  aux
-                  (
-                    xs, 
-                    cons_vt
-                    (@(nil_vt(), nil_vt(), ERRlast(@(x0, x1, x2))), res)
+                | _ => aux(xs, cons_vt(
+                      @(nil_vt(), nil_vt(), ERRlast(@(x0, x1, x2))), res
+                    )
                   )
               end
             | _ => aux(xs, cons_vt(@(x0, x1, ERRother(x2)), res)) 
@@ -296,6 +290,7 @@ in
 end
 
 // END OF CLASSIFY
+
 
 (* ****** ****** *) 
 

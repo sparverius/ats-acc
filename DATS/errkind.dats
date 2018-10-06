@@ -10,21 +10,24 @@
 (* ****** ****** *)
 
 staload "./../SATS/errkind.sats"
+staload "./../SATS/errkind_util.sats"
 
 (* ****** ****** *)
 
 
 implement
-print_errkind(err) = fprint_errkind(stderr_ref, err)
+print_errkind
+(err) = fprint_errkind(stderr_ref, err)
+
 
 implement
-fprint_errkind(out, err) = (fprint!(out, get_errkind_string(err)))
+fprint_errkind
+(out, err) = (fprint!(out, get_errkind_string(err)))
 
 
-(* ****** ****** *)
-
-
-implement free_errkind(x): void = {
+implement 
+free_errkind
+(x): void = {
   val _ = (
     case+ x of
       | ~ERRwarn   l => free_toks(l)
@@ -45,15 +48,15 @@ implement free_errkind(x): void = {
       | ~ERRnonex  l => free_toks(l)
       | ~ERRlast   l => (free_toktup(l))
       | ~ERRunit   _ => ()
-//(*
+      //
       | ~ERRsimpre  l => free_toks(l)
-//*)
   )
 }
 
 
 implement
-get_errkind_string(xs) = (
+get_errkind_string
+(xs) = (
   case+ xs of
     | ERRwarn   _ => "ERRwarn"
     | ERRparse  _ => "ERRparse"
@@ -73,13 +76,10 @@ get_errkind_string(xs) = (
     | ERRsortu  _ => "ERRsortu"
     | ERRnonex  _ => "ERRnonex"
     | ERRunit   _ => "ERRunit"
-//(*
+    //
     | ERRsimpre _ => "ERRstaimpre"
-//*)
+
 )
-
-
-(* ****** ****** *)
 
 
 implement{} print_parse  (xs: toks, color: bool): void = (free_toks(xs))
@@ -100,12 +100,13 @@ implement{} print_show   (xs: toks, color: bool): void = (free_toks(xs))
 implement{} print_warn   (xs: toks, color: bool): void = (free_toks(xs))
 implement{} print_unit   ((*    *)): void = ()
 implement{} print_last (xs: toktup, color: bool): void = (free_toktup(xs))
-//(*
+//
 implement{} print_simpre (xs: toks, color: bool): void = (free_toks(xs))
-//*)
+
 
 implement{}
-print_errkind_single(x2, color) = (
+print_errkind_single
+(x2, color) = (
   case+ x2 of
   | ~ERRparse  x => print_parse<>(x, color)
   | ~ERRother  x => print_other<>(x, color)
@@ -125,16 +126,14 @@ print_errkind_single(x2, color) = (
   | ~ERRlast   x => print_last<>(x, color)
   | ~ERRwarn   x => print_warn<>(x, color)
   | ~ERRunit   _ => print_unit<>( )
-//(*
+  //
   | ~ERRsimpre x => print_simpre<>(x, color)
-//*)
-
 ) 
 
-(* ****** ****** *)
 
 implement
-free_errtup(xs) = let
+free_errtup
+(xs) = let
   val x0 = xs.0
   val x1 = xs.1
   val x2 = xs.2
@@ -143,11 +142,10 @@ in
 end
 
 
-(* ****** ****** *)
-
 implement
-free_errtups(xs)
-  = let fun auxmain(xs: errtups): void = 
+free_errtups
+(xs) = let 
+    fun auxmain(xs: errtups): void = 
           case+ xs of
           | ~nil_vt() => ()
           | ~cons_vt(x, xs) => (free_errtup(x); auxmain(xs))
