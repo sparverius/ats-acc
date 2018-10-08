@@ -47,6 +47,9 @@ fun{}
 print_sortu(xs: toks, color: bool): void
 
 fun{}
+print_nonex(xs: toks, color: bool): void
+
+fun{}
 print_other(xs: toks, color: bool): void
 
 fun{}

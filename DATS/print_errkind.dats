@@ -94,15 +94,8 @@ print_simpre
   val rest = drop_exn_free(rest, 0)
   val (error_statement, rest) = 
     takeskip_until_free(rest, lam i => is_osq(i))
-
 in
 //  prints 'error(...):'
-    (*
-    print_ident3; 
-    print_toks_color_err(error, color);
-    nl;
-    print_ident3;
-    *)
     print_error(error, color);
 //
     (
@@ -130,14 +123,9 @@ print_warn
 (xs, color) = let
   val (error, rest) = takeskip_until_in_free(xs, lam i => is_col(i))
 in
-  (*
-  print_ident3;
-  print_toks_color_err(error, color);
-  print_after_error3;
-  *)
   print_error(error, color);
-  (* print_ident3;  *)
   print_toks_free_nonewln(rest);
+  print_after_all
 end
 
 
@@ -160,7 +148,7 @@ print_other
 (xs, color) = let
     val xs = take_until_free2(xs, lam i => tok_ide_eq(i, "typechecking"))
   in
-    (print_ident3; print_toks_free_nonewln(xs))
+    (print_ident3; print_toks_free_nonewln(xs); print_after_all)
   end
 
 
@@ -174,6 +162,24 @@ in
   print_error(error, color);
   print "[lexing] "; 
   simplify_print(rest, color); 
+  print_after_all
+)
+end
+
+implement{}
+print_nonex
+(xs, color) = let
+  val (error, rest) = takeskip_until_in_free(xs, lam i => is_col(i))
+  val rest = drop_exn_free(rest, 0)
+  val (error_statement, pattern) = takeskip_until_free(rest, lam i => is_col(i))
+  val pattern = drop_exn_free(pattern, 0)
+  val pattern = take_until_free2(pattern, lam i => tok_ide_eq(i, "typechecking"))
+in
+(
+  print_error(error, color);
+  print_toks_free_nonewln(error_statement);
+  print_after_message("");
+  print_toks_free_nonewln(pattern);
   print_after_all
 )
 end
@@ -193,19 +199,14 @@ print_found
   val y0 = drop_exn_free(t3, 0)
 in
   (
-    (*
-    print_ident3;
-    // print_toks_free_nonewln(h0);
-    print_toks_color_err(error, color);
-    print_after_error3;
-    *)
     print_error(error, color);
     print_toks_free(h1);
     print_ident3;
     print_toks_free_nonewln(h2);
     simplify_print(h3, color);
     print_ident3_nl;
-    print_toks_free_nonewln(y0)
+    print_toks_free_nonewln(y0);
+    print_after_all
   )
 end
   
@@ -262,35 +263,24 @@ print_sortu
   //  val sgn = "  (=>)  "
   (* val sgn = "  ~>  " *)
   val sgn = " (should be) "
-in (
-  (*
-  print_ident3;
-  print_toks_color_err(error, color);
-  (* print_toks_free_nonewln(h0);  *)
-  print " ";
-  *)
+in
+(
   print_error(error, color);
   print_toks_free_nonewln(h1);
-  (* nl; *)
-  (* print_ident6_nl; *)
+
   print_after_message("");
 
-  //  print ("actual: "); 
   print_actual(color);
   simplify_print(par2, color); // given
 
-
-  (* print_str_color_sgn(sgn, color); *)
-  (* print_after_message(""); *)
   print_after;
 
-  //print ("needed: ");
   print_needed(color);
   simplify_print(par, color); // needed
 
   print_after_all
-
-) end
+) 
+end
 
 
 implement{}
@@ -333,20 +323,21 @@ print_tyleq
   val sgn_overflow = "    should be\n          "
 in
 (
+  free_toks(h2); free_toks(h4); 
+
   print_error(error, color);
   print_toks_free_nonewln(message (* h10 *));
-  free_toks(h2);
-  free_toks(h4);
+
   print_after_message("") ;
-  (* simplify_print(t40, color); *) // // orig
-  //print ("actual:  "); 
+
   print_actual(color);
   simplify_print(h30, color); // actual
-  (* simplify_print(h30, color); *) // // orig
+
   print_after;
-  //  print ("needed:  "); 
+
   print_needed(color);
   simplify_print(t40, color); // needed
+
   print_after_all
 )
 end
@@ -394,12 +385,17 @@ in
 (
   print_error(error, color);
   free_toks(rest);
+
   print_after_error3;
+
   print_toks_free_nonewln(error_statement);
+
   print_after_message("");    
+
   print "[ ";
   simplify_print(xs3, color);
   print " ]";
+
   print_after_all
 )
 end
@@ -581,7 +577,7 @@ print_exit2
   fun
   auxmain(xs0: toks, i: int): void = 
     case+ xs0 of 
-    | ~nil_vt() => () 
+    | ~nil_vt() => (print_after_all) 
     | ~cons_vt(x, xs) => let
         val len = i + tok_get_len(x)
       in
@@ -633,7 +629,7 @@ end
 implement{}
 print_last
 (xs, color) = let
-  val () = println!()
+  // val () = nl // for two lines before final message
   val (x0, x1, x2) = (xs.0, xs.1, xs.2)
   val (h,t) = takeskip_until_free(x1, lam i => tok_ide_eq(i, "exit"))
   val x3 = skip_until_free(x2, lam i => is_opr(i))
@@ -659,6 +655,7 @@ in
       print_str_color(": ", color, "yellow")
     );
     print_toks_free_nonewln(x3);
+    (* print_after_all *)
     // print_toks_color_err(x3, color);
   ) 
 end
