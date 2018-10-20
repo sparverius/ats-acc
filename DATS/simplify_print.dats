@@ -51,7 +51,9 @@ staload "./../SATS/simplify_print.sats"
 
 implmnt(*{}*)
 get_simplified_idestring
-(idestring: string): string = 
+(idestring: string, verbose: bool): string = 
+if verbose then
+(
   case+ idestring of
   | "d0exp" =>  "dynamic expression"
   | "g0int_t0ype" =>  "g0int"
@@ -68,12 +70,33 @@ get_simplified_idestring
   | "list_vt0ype_int_vtype" =>  "list_vt"
   | "list0_t0ype_type" => "list0"
   | _ => idestring
-
+)
+else 
+(
+  case+ idestring of
+  | "d0exp" =>  "dynamic expression"
+  | "g0int_t0ype" =>  "int"
+  | "g0float_t0ype" =>  "float"
+  | "g0uint_t0ype" =>  "uint"
+  | "g1int_int_t0ype" =>  "int"
+  | "char_t0ype" =>  "char"
+  | "char_int_t0ype" =>  "char"
+  | "bool_t0ype" =>  "bool"
+  | "string_type" =>  "string"
+  | "string_int_type" =>  "string"// even though indexed?
+  | "strnptr_addr_int_vtype" =>  "strnptr"
+  | "list_t0ype_int_type" =>  "list"
+  | "list_vt0ype_int_vtype" =>  "list_vt"
+  | "list0_t0ype_type" => "list0"
+  | "sub_int_int" => "-"
+  | "add_int_int" => "+"
+  | _ => idestring
+)
 
 
 implmnt(*{}*)
 print_simplified_idestring
-(idestring: string, color_name: string, color: bool): void = (
+(idestring: string, color_name: string, color: bool, verbose: bool): void = (
   ifcase 
   | idestring = "atstype_int" || idestring = "int_kind" => (
     (if color then (print_a_color("dim"); print_a_color("yellow")));
@@ -94,7 +117,7 @@ print_simplified_idestring
 
 implmnt(*{}*)
 just_print
-(x0: token, color: bool, color_name: string): void = 
+(x0: token, color: bool, color_name: string, verbose: bool): void = 
 (
   (if color then print_a_color(color_name));
   print_token0_free(x0); 
@@ -104,7 +127,7 @@ just_print
 
 implmnt(*{}*)
 simplify_whats_inside
-(xs0: toks) : (toks, toks) = let
+(xs0: toks, verbose: bool) : (toks, toks) = let
   val xs00 = drop_exn_free(xs0, 0)
   val (par, rest) = peek_paren_list3(xs00)
 in
@@ -114,8 +137,8 @@ end
 
 implmnt(*{}*)
 generic_simplify
-(x0: token, xs0: toks, insert: string): void = let
-  val (expression, rest) = simplify_whats_inside(xs0)
+(x0: token, xs0: toks, insert: string, verbose: bool): void = let
+  val (expression, rest) = simplify_whats_inside(xs0, verbose)
 in
   (
     free_token(x0); 
@@ -131,16 +154,16 @@ end
 
 implmnt(*{}*)
 simplify_idestring
-(x0: token, color: bool): void = 
+(x0: token, color: bool, verbose: bool): void = 
   case- x0 of
   | ~TOKide(i) => let
       val _ = assertloc(g1int2int_ssize_int(length(i)) > 0)
       val str = $UN.strnptr2string(i)
-      val simplified_idestring = get_simplified_idestring(str)
+      val simplified_idestring = get_simplified_idestring(str, verbose)
     in
       (
       (* val () = (if color then print_a_color("cyan")) *)
-      print_simplified_idestring(simplified_idestring, "cyan", false(*color*));
+      print_simplified_idestring(simplified_idestring, "cyan", false(*color*), verbose);
       (* val () = (if color then prcc) *)
       strnptr_free(i)
       )
@@ -162,7 +185,7 @@ simplify_idestring
 
 implmnt(*{}*)
 simplify_S2Eint
-(x0: token, xs0: toks): void = generic_simplify(x0, xs0, "")
+(x0: token, xs0: toks, verbose: bool): void = generic_simplify(x0, xs0, "", verbose)
 
 
     (*
@@ -171,7 +194,7 @@ simplify_S2Eint
 
 implmnt(*{}*)
 simplify_S2Eintinf
-(x0: token, xs0: toks): void = generic_simplify(x0, xs0, "inf ")
+(x0: token, xs0: toks, verbose: bool): void = generic_simplify(x0, xs0, "inf ", verbose)
 
 
     (*
@@ -180,7 +203,7 @@ simplify_S2Eintinf
 
 implmnt(*{}*) 
 simplify_S2Efloat
-(x0: token, xs0: toks): void = generic_simplify(x0, xs0, "")
+(x0: token, xs0: toks, verbose: bool): void = generic_simplify(x0, xs0, "", verbose)
 
 
     (*
@@ -189,7 +212,7 @@ simplify_S2Efloat
 
 implmnt(*{}*) 
 simplify_S2Estring
-(x0: token, xs0: toks): void = generic_simplify(x0, xs0, "")
+(x0: token, xs0: toks, verbose: bool): void = generic_simplify(x0, xs0, "", verbose)
 
 
     (*
@@ -198,7 +221,7 @@ simplify_S2Estring
 
 implmnt(*{}*)
 simplify_S2Ecst
-(x0: token, xs0: toks): (toks, toks) = let
+(x0: token, xs0: toks, verbose: bool): (toks, toks) = let
   val () = free_token(x0)
   val xs00 = drop_exn_free(xs0, 0)
   val (par, rest) = peek_paren_list3(xs00)
@@ -208,11 +231,11 @@ end
     // helper
 implmnt(*{}*)
 simplify_S2Eext
-(x0: token, xs0: toks): (toks) = let
+(x0: token, xs0: toks, verbose: bool): (toks) = let
   val () = free_token(x0)
   val s0 = skip_until_in_free(xs0, lam i => is_opr(i))
   val (expression, rest) = peek_paren_list3(s0)
-  val () = print "# "  // val () = print "ext. "
+  val () = if verbose then print "# "  // val () = print "ext. "
   val () = free_toks(rest)
 in
   expression
@@ -225,7 +248,7 @@ end
 
 implmnt(*{}*)
 simplify_S2Eextype
-(x0: token, xs0: toks): (toks) = simplify_S2Eext(x0, xs0)
+(x0: token, xs0: toks, verbose: bool): (toks) = simplify_S2Eext(x0, xs0, verbose)
 
 
     (*
@@ -234,7 +257,7 @@ simplify_S2Eextype
 
 implmnt(*{}*)
 simplify_S2Eextkind
-(x0: token, xs0: toks): (toks) = simplify_S2Eext(x0, xs0)
+(x0: token, xs0: toks, verbose: bool): (toks) = simplify_S2Eext(x0, xs0, verbose)
 
 
     (*
@@ -243,7 +266,7 @@ simplify_S2Eextkind
 
 implmnt(*{}*)
 simplify_S2Evar
-(x0: token, xs0: toks): (toks, toks, toks) = let
+(x0: token, xs0: toks, verbose: bool): (toks, toks, toks) = let
   val () = free_token(x0)
   val xs00 = drop_exn_free(xs0, 0)
   val (par, rest) = peek_paren_list3(xs00)
@@ -263,8 +286,8 @@ end
     *)
 
 implmnt(*{}*)
-simplify_S2EVar(x0, xs0) = let
-  val (expression, rest) = simplify_whats_inside(xs0)
+simplify_S2EVar(x0, xs0, verbose) = let
+  val (expression, rest) = simplify_whats_inside(xs0, verbose)
   val () = (free_token(x0); free_toks(rest))  
 in
   expression
@@ -311,7 +334,7 @@ end
 
 implmnt(*{}*)
 simplify_S2Eat
-(x0: token, xs0: toks): toks = let
+(x0: token, xs0: toks, verbose: bool): toks = let
   val () = free_token(x0)
   val rest = skip_until_in_free(xs0, lam i => is_opr(i))
   val () = print "@ "
@@ -346,7 +369,7 @@ end
 
 implmnt(*{}*)
 simplify_S2Eapp
-(x0: token, xs0: toks): (toks, toks, toks, toks, toks) = let
+(x0: token, xs0: toks, verbose: bool): (toks, toks, toks, toks, toks) = let
   val () = free_token(x0)
   val r0 = drop_exn_free(xs0, 0)
   val (r00, t00) = peek_paren_list(r0)
@@ -381,7 +404,7 @@ end
 
 implmnt(*{}*)
 simplify_S2Efun
-(x0: token, xs: toks): (toks, toks, toks, toks, toks) = let
+(x0: token, xs: toks, verbose: bool): (toks, toks, toks, toks, toks) = let
 
   val () = free_token(x0)
   val rest = drop_exn_free(xs, 0)
@@ -458,7 +481,7 @@ end
 
 implmnt(*{}*)
 simplify_S2Etyarr
-(x0: token, xs0: toks): (toks, toks) = let
+(x0: token, xs0: toks, verbose: bool): (toks, toks) = let
   val () = free_token(x0)
   val xs0 = drop_exn_free(xs0, 0)
   //
@@ -482,7 +505,7 @@ end
 
 implmnt(*{}*)
 simplify_S2Einvar
-(x0: token, xs0: toks): toks = let
+(x0: token, xs0: toks, verbose: bool): toks = let
   val () = free_token(x0)
   val s0 = skip_until_in_free(xs0, lam i => is_opr(i))
   val () = print "invar "
@@ -497,7 +520,7 @@ end
 
 implmnt(*{}*) 
 simplify_S2Etyrec
-(x0: token, xs0: toks): toks = let
+(x0: token, xs0: toks, verbose: bool): toks = let
   val () = free_token(x0)
   val s0 = skip_until_in_free(xs0, lam i => is_opr(i))
   val (h1, t1) = toks_head_tail_free(s0)
@@ -526,7 +549,7 @@ end
     *)
 
 implmnt(*{}*)
-simplify_S2Eexi(x0, xs0): (toks, toks) = let
+simplify_S2Eexi(x0, xs0, verbose: bool): (toks, toks) = let
   val r0 = drop_exn_free(xs0, 0) // i.e. 'S2Eexi('
   val (t0,s0) = takeskip_until_in_free(r0, lam i => is_sco(i))
   // t0 = n$xxxx$xxxxx(xxxxx);
@@ -590,7 +613,7 @@ end
 
 implmnt(*{}*)
 simplify_S2Euni
-(x0: token, xs0: toks): (toks, toks, toks) = let
+(x0: token, xs0: toks, verbose: bool): (toks, toks, toks) = let
   val () = free_token(x0)
   val r0 = drop_exn_free(xs0, 0) // i.e. '('
   //
@@ -671,14 +694,18 @@ datatype s2rt
     *)
 implmnt(*{}*)
 simplify_S2RTbas
-(x0: token, xs0: toks) : (toks, toks) = let
+(x0: token, xs0: toks, verbose: bool) : (toks, toks) = let
   // datatype s2rt = | S2RTbas of s2rtbas (* base sort *)
+// old version -- doesnt work really
   val all = skip_until_in_free(xs0, lam i => is_sco(i))
   val all = drop_exn_free(all, 0)
   (* val res = take_until_free2(all, lam i => is_cpr(i)) *)
   val (res, rest) = takeskip_until_free(all, lam i => is_cpr(i))
   val rest = drop_exn_free(rest,1)
   val () = free_token(x0)
+  (* val res = cons_vt(x0, xs0) *)
+  (* val rest = nil_vt() *)
+  
 in
   (res, rest)
 end
@@ -698,7 +725,7 @@ simplify_print
 *)
 
 implmnt(*{}*)
-simplify_print(xs, color) = let
+simplify_print(xs, color, verbose) = let
 (*^^^TODO^^^*)
 
 fun
@@ -711,39 +738,48 @@ auxmain(xs1: toks): void =
     | is_csq(x0) => (free_token(x0); free_toks(xs0)) //auxmain(xs0)) (*  ']'  *)
     | is_opr(x0) => (print_token0_free(x0); auxmain(xs0)) (*  '('  *)
     | is_cpr(x0) => (print_token0_free(x0); auxmain(xs0)) (*  ')'  *)
-    | is_int(x0) => (just_print(x0, color, "dim"); auxmain(xs0)) (*  int  *)
-    | is_chr(x0) => (just_print(x0, color, "light_green"); auxmain(xs0)) (*  chr  *) 
+    | is_int(x0) => (just_print(x0, color, "dim", verbose); auxmain(xs0)) (*  int  *)
+    | is_chr(x0) => (just_print(x0, color, "light_green", verbose); auxmain(xs0)) (*  chr  *) 
     | is_col(x0) => (print_token0_free(x0); auxmain(xs0)) (*  ':'  *)
     | is_sco(x0) => (free_token(x0); auxmain(xs0)) (*  ';'  *)
-    | is_err(x0) => (just_print(x0, color, "red"); auxmain(xs0)) (* 'error' *)
-    | is_ide(x0) => (simplify_idestring(x0, color); auxmain(xs0)) (*  ide  *)
+    | is_err(x0) => (just_print(x0, color, "red", verbose); auxmain(xs0)) (* 'error' *)
+    | is_ide(x0) => (simplify_idestring(x0, color, verbose); auxmain(xs0)) (*  ide  *)
     (* datatype s2exp_node = *)
-    | tok_s2e_eq(x0, "S2Eint") => simplify_S2Eint(x0, xs0)
-    | tok_s2e_eq(x0, "S2Eintinf") => simplify_S2Eint(x0, xs0)
-    | tok_s2e_eq(x0, "S2Efloat") => simplify_S2Efloat(x0, xs0)
-    | tok_s2e_eq(x0, "S2Estring") => simplify_S2Estring(x0, xs0)
+    | tok_s2e_eq(x0, "S2Eint") => simplify_S2Eint(x0, xs0, verbose)
+    | tok_s2e_eq(x0, "S2Eintinf") => simplify_S2Eint(x0, xs0, verbose)
+    | tok_s2e_eq(x0, "S2Efloat") => simplify_S2Efloat(x0, xs0, verbose)
+    | tok_s2e_eq(x0, "S2Estring") => simplify_S2Estring(x0, xs0, verbose)
     | tok_s2e_eq(x0, "S2Ecst") => let 
-          val (par, rest) = simplify_S2Ecst(x0, xs0)
+          val (par, rest) = simplify_S2Ecst(x0, xs0, verbose)
         in  
           (auxmain(par); auxmain(rest))
         end
     | tok_s2e_eq(x0, "S2Eextype") => let
-          val expression = simplify_S2Eextype(x0, xs0)
+          val expression = simplify_S2Eextype(x0, xs0, verbose)
         in 
-          auxmain(expression) 
+          if verbose then
+            auxmain(expression) 
+          else
+            free_toks(expression)
         end
     | tok_s2e_eq(x0, "S2Eextkind") => let
-          val expression = simplify_S2Eextkind(x0, xs0)
+          val expression = simplify_S2Eextkind(x0, xs0, verbose)
         in 
-          auxmain(expression) 
+          if verbose then
+            auxmain(expression) 
+          else
+            free_toks(expression)
         end
     | tok_s2e_eq(x0, "S2Evar") => let 
-          val (par2, rest3, rest) = simplify_S2Evar(x0, xs0)
+          val (par2, rest3, rest) = simplify_S2Evar(x0, xs0, verbose)
         in 
-          (auxmain(par2); print " "; auxmain(rest3); auxmain(rest))
+          if verbose then
+            (auxmain(par2); print " "; auxmain(rest3); auxmain(rest))
+          else
+            (auxmain(par2); free_toks(rest3); auxmain(rest))
         end    
     | tok_s2e_eq(x0, "S2EVar") => let
-        val res = simplify_S2EVar(x0, xs0)
+        val res = simplify_S2EVar(x0, xs0, verbose)
       in
         auxmain(res)
       end
@@ -754,24 +790,53 @@ auxmain(xs1: toks): void =
         in
           auxmain(h1); print "("; auxmain(t1); print " )";
         end *)
-    | tok_s2e_eq(x0, "S2Eat") => auxmain(simplify_S2Eat(x0, xs0)) // 08-07
+    | tok_s2e_eq(x0, "S2Eat") => auxmain(simplify_S2Eat(x0, xs0, verbose)) // 08-07
      // | tok_s2e_eq(x0, "S2Esizeof") =>
      // | tok_s2e_eq(x0, "S2Eeff") =>
      // | tok_s2e_eq(x0, "S2Eeqeq") =>
      // | tok_s2e_eq(x0, "S2Eproj") =>
     | tok_s2e_eq(x0, "S2Eapp") => let
-        val (h0, par, par1, t00, par1rest) = simplify_S2Eapp(x0, xs0)
+        val (h0, par, par1, t00, par1rest) = simplify_S2Eapp(x0, xs0, verbose)
       in
+        if verbose then
         (
           auxmain(h0); print "("; auxmain(par); 
           (if isneqz par1 then  (print ", "; auxmain(par1)) else free_toks(par1));
           print ")"; auxmain(t00); auxmain(par1rest);
         )
+        else
+        (
+
+          ifcase
+(*
+          | toks_eq_toks(x0, TOKide("g0int_t0ype")) 
+            || toks_eq_toks(x0, TOKide("g1int_int_t0ype"))
+            || toks_eq_toks(x0, TOKide("g0float_t0ype")) 
+            || toks_eq_toks(x0, TOKide("g0uint_t0ype")) => 
+              (auxmain(h0); free4_toks(par, par1, t00, par1rest))
+*)
+          | _ => 
+            (
+              auxmain(h0); print "("; auxmain(par); 
+              (if isneqz par1 then  (print ", "; auxmain(par1)) else free_toks(par1));
+              print ")"; auxmain(t00); auxmain(par1rest);
+            )
+        )
+        (* ( *)
+        (*   auxmain(h0);  *)
+        (*   (\* free4_toks(par, par1, t00, par1rest) *\) *)
+        (*   print_toks_free(par1); *)
+        (*   free3_toks(par, t00, par1rest) *)
+
+        (*   (\* print "("; auxmain(par);  *\) *)
+        (*   (\* (if isneqz par1 then  (print ", "; auxmain(par1)) else free_toks(par1)); *\) *)
+        (*   (\* print ")"; auxmain(t00); auxmain(par1rest); *\) *)
+        (* ) *)
       end
      // | tok_s2e_eq(x0, "S2Elam") =>
     | tok_s2e_eq(x0, "S2Efun") => let
           val (ftype, afun, item, return_type, annotate) 
-            = simplify_S2Efun(x0, xs0)
+            = simplify_S2Efun(x0, xs0, verbose)
         in
           (
             (* free_toks(ftype); *)
@@ -795,27 +860,27 @@ auxmain(xs1: toks): void =
      // | tok_s2e_eq(x0, "S2Etop") =>
      // | tok_s2e_eq(x0, "S2Ewithout") =>
     | tok_s2e_eq(x0, "S2Etyarr") => let 
-          val (to_simplify, rest) = simplify_S2Etyarr(x0, xs0)
+          val (to_simplify, rest) = simplify_S2Etyarr(x0, xs0, verbose)
         in
           (print("[ ["); auxmain(to_simplify); print("]["); auxmain(rest); print("] ]"))
         end
     | tok_s2e_eq(x0, "S2Etyrec") => let
-        val next = simplify_S2Etyrec(x0, xs0)
+        val next = simplify_S2Etyrec(x0, xs0, verbose)
       in
         auxmain(next);
       end
     | tok_s2e_eq(x0, "S2Einvar") => let
-        val rest = simplify_S2Einvar(x0, xs0)            
+        val rest = simplify_S2Einvar(x0, xs0, verbose)            
       in
         auxmain(rest)
       end
     | tok_s2e_eq(x0, "S2Eexi") => let
-          val (res2, rest) = simplify_S2Eexi(x0, xs0)
+          val (res2, rest) = simplify_S2Eexi(x0, xs0, verbose)
         in
           (auxmain(res2); auxmain(rest))
         end
     | tok_s2e_eq(x0, "S2Euni") => let
-        val (t0, t1, t2) = simplify_S2Euni(x0, xs0)
+        val (t0, t1, t2) = simplify_S2Euni(x0, xs0, verbose)
       in
         print "uni. "; 
         auxmain(t0); auxmain(t1); auxmain(t2)
@@ -826,7 +891,9 @@ auxmain(xs1: toks): void =
     | tok_s2e_eq(x0, "S2Eerrexp") => 
         (
           (if color then (print_a_color("dim")));
-          print_token0_free(x0);  
+          (* print_token0_free(x0);   *)
+          free_token(x0);
+          print("errexp");
           (* print_toks_free_nonewln(xs0); *)
           free_toks(xs0);
           (if color then prcc)
@@ -840,7 +907,7 @@ auxmain(xs1: toks): void =
 
     (* datatype s2rt = *)
     | tok_s2e_eq(x0, "S2RTbas") => let 
-          val (res, rest) = simplify_S2RTbas(x0, xs0)
+          val (res, rest) = simplify_S2RTbas(x0, xs0, verbose)
         in 
           auxmain(res); auxmain(rest)
         end

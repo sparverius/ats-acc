@@ -49,49 +49,34 @@ fn print_usage(): void = print!("
 acc [whichcc] <filename.dats> 
   
 whichcc:
-  -my     => myatscc 
-  -pc     => patscc 
-  (* 
-  -po     => patsopt  // under development
-  *)
-  -tc     => patscc -tcats    
-  -tcats
-  -pcm    => patscc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC
-  -pcgc   => patscc -D_GNU_SOURCE -DATS_MEMALLOC_GCBDW
+    my         =>    myatscc 
+    pc         =>    patscc 
+    pm         =>    PATS
+    po         =>    patsopt 
+    gc         =>    PATS_GC
+    tcats      =>    patscc -tcats 
+    tc         =>    patscc -tcats 
+    lm         =>    PATS_LM
+    potc       =>    patsopt --typecheck --dynamic 
+    fly        =>    patscc -tcats 
+    c          =>    myatscc 
+    tcatsc     =>    patscc -tcats 
 
-  --myatscc   => myatscc 
-  --patscc    => patscc 
-  (*
-  --patsopt   => patsopt // under development
-  *)
-  --patscc_m  => patscc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC
-  --patscc_gc => patscc -D_GNU_SOURCE -DATS_MEMALLOC_GCBDW
+    myatscc    =>    myatscc 
+    patscc     =>    patscc 
+    patscc_gc  =>    PATS
+    tcats      =>    patscc -tcats 
+    patsopt    =>    patsopt 
 
-
-filename:
-  (.sats not yet supported)
-
-example:
-  acc -pc foo.dats -o foo 
-
-  error hints: 
-     y <~ x  :  'x' should be 'y' 
-    y <?~ x  :  'x' should (most likely) be 'y'
-
-          #  :  prefix for external value or external kind 
-                (S2Eextype | S2Eextkind) 
-
-        [n]  :  existentially qualified type n (S2Eexi)
-        inf  :  intinf (S2Eintinf)
-       uni.  :  universally quantified type (S2Euni)
-
-      g0int  :  g0int_t0ype   (unindexed integer)
-      g1int  :  g1int_int_t0ype (indexed integer)
-
-      XXXX-
-      XXXXX  :  where X is an integer (I believe is a tag of some sort)
+    where 
+    {
+      PATS          patscc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC 
+      PATS_GC       patscc -D_GNU_SOURCE -DATS_MEMALLOC_GCBDW 
+      PATS_LM       patscc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -lm
+    }
 
 ")
+
 (*
   // for future
   --json                        patsopt --jsonize-2 -d 
@@ -223,13 +208,14 @@ end
 
 
 fn
-get_show_options(name: string) : (bool, bool, bool) = let
+get_show_options(name: string) : (bool, bool, bool, bool) = let
   //  if second argument true, sets experimental color
   val color_choice = (if (name = "c" || name = "tcatsc") then true else false)
   val linenum = (if name = "fly" || name = "-fly" then false else true)
   val loc = (if name = "fly" || name = "-fly" then false else true)
+  val verbose = (if name = "c" || name = "tcatsc" || name = "tc" then false else true)
 in
-  (color_choice, linenum, loc)  
+  (color_choice, linenum, loc, verbose)  
 end
 
 (*
@@ -277,14 +263,14 @@ run
     | iseqz listvt_of_tokens =>
         let val () = free_toks(listvt_of_tokens) in 0 end
     | (*isneqz xs*)_ => let
-        val (color_choice, linenum, loc) = get_show_options(name)
+        val (color_choice, linenum, loc, verbose) = get_show_options(name)
         //  tokens converted and divided into separate messages
         val messages = tokens_to_messages_free(listvt_of_tokens)
         //  the separated messages are then classified 
         val classified_messages = classify_toks_free(messages)
         //  the classified messages are then pretty-printed
         val () =
-        print_classified_free(classified_messages, color_choice, linenum, loc)
+        print_classified_free(classified_messages, color_choice, linenum, loc, verbose)
       in 1 end
     )
   val () //  cleanup and exit with non-zero status
@@ -326,38 +312,51 @@ implement
 main 
 {n} (argc, argv) = res where 
 {
-  val x = ( 
-    fix loop 
-    (ac: int n, av: !argv(n), i: natLte(n), res: List0_vt(string))
-    : List0_vt(string) =>
-        ifcase
-        | ac > i => loop(ac, av, i+1, cons_vt(" ", cons_vt(av[i], res)))
-        | (*else*)_ => list_vt_reverse(res)
-
-  )(argc, argv, 1, nil_vt())
-
   val err =   // response to argc = 0 .. 
-  (lam () => println!( "... demons may fly out of my nose..."))
+    (lam () => println!( "... demons may fly out of my nose..."))
+  val res = 
+    ifcase
+    | argc >= 2 =>
+    (
+      let
+      val x = ( 
+        fix loop 
+        (ac: int n, av: !argv(n), i: natLte(n), res: List0_vt(string))
+        : List0_vt(string) =>
+            ifcase
+            | ac > i => loop(ac, av, i+1, cons_vt(" ", cons_vt(av[i], res)))
+            | (*else*)_ => list_vt_reverse(res)
 
-  val 
-  res = (
-    case+ argc of 
-    | 1 => let val () = (free(x); print_usage()) in 1 end
-    | 2 => run(x, "c") 
-    | 3 => let
-        val name = argv[1] : string
-        val filename = argv[2] : string
+        )(argc, argv, if (argc = 2) then 1 else 2, nil_vt())
+      // val () = println!("x = ", x)
+
+      val 
+      res = (
+        case+ argc of 
+        | 2 => (
+                 if strstr(g1ofg0(argv[1]), ".dats") >= 0 
+                 then run(x, "c") 
+                 else (print_usage(); free(x); 1)
+               )
+        | 3 => let
+            val name = argv[1] : string
+            val filename = argv[2] : string
+          in
+            run(x, name)
+          end
+        | (* >= 4 *)_ => let
+            val () = assertloc(argc >= 4)
+            val name = argv[1] : string
+          in  
+            run(x, name)
+          end
+      )
       in
-        run(x, name)
+        res
       end
-    | 0 => let val () = (free(x); err(); print_usage()) in 9 end 
-    | (* >= 4 *)_ => let
-        val () = assertloc(argc >= 4)
-        val name = argv[1] : string
-      in  
-        run(x, name)
-      end
-  )
+    )
+    | argc = 0 => let val () = (err(); print_usage()) in 9 end 
+    | _ => (* argc = 1 => *) let val () = print_usage() in 1 end
 }
 
 

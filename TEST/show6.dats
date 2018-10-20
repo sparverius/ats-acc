@@ -30,3 +30,5 @@ fn
 foo(x: int, y: int, b: bool): int
 
 val _ = $showtype(foo)
+
+val () = $showtype("")

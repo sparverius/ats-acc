@@ -243,7 +243,7 @@ show_first2
 
 fn
 print_classified_free
-(xs: errtups, color: bool, lineno: bool, loc: bool): void = let
+(xs: errtups, color: bool, lineno: bool, loc: bool, verbose: bool): void = let
   val number_of_messages = 500
   fun
   aux (xs: errtups, ys: toks, i: int): void =
@@ -266,7 +266,7 @@ print_classified_free
               (y, ys, x0, x1, x2, color, lineno, loc);
               // show_errkind(x2);// optional to show errorkind string
               (if name != "ERRlast" then nl);
-              print_errkind_single(x2, color); 
+              print_errkind_single(x2, color, verbose); 
 
               aux(xs, y, y_ys)
             )

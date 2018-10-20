@@ -50,11 +50,34 @@ free_toks(xs)
   }
 
 
+fn
+free2_toks
+(t1: toks, t2: toks): void = 
+(free_toks(t1); free_toks(t2))
+fn
+free3_toks
+(t1: toks, t2: toks, t3: toks): void = 
+(free_toks(t1); free_toks(t2); free_toks(t3))
+fn
+free4_toks
+(t1: toks, t2: toks, t3: toks, t4: toks): void = 
+(free_toks(t1); free_toks(t2); free_toks(t3); free_toks(t4))
+fn
+free5_toks
+(t1: toks, t2: toks, t3: toks, t4: toks, t5: toks): void = 
+(free_toks(t1); free_toks(t2); free_toks(t3); free_toks(t4); free_toks(t5))
+fn
+free5_toks
+(t1: toks, t2: toks, t3: toks, t4: toks, t5: toks, t6: toks): void = 
+(free_toks(t1); free_toks(t2); free_toks(t3); free_toks(t4); free_toks(t5); free_toks(t6))
+
+
 implement
 free_toktup(xs)
   = (
       free_toks(xs.0); free_toks(xs.1); free_toks(xs.2)
     )
+
 
 
 implement
