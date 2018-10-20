@@ -20,6 +20,8 @@ Places an importance of being memory frugal and explicit memory management (no m
 The application wraps patsopt, patscc and myatscc into one executable.
 The overall goal is to create a unified tool surrounding the ats compiler and other utilities.
 
+##### Automated installer script    [acc-install.sh](https://gist.github.com/sparverius/7887d05c964269bb391cb5145e619425)
+
 ## Build
 
 	make
