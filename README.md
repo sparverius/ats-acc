@@ -82,31 +82,31 @@ exit(ATS): uncaught exception: (1025)
   
 (Optional)
 whichcc:
-    my         =>    myatscc 
-    pc         =>    patscc 
-    pm         =>    PATS
-    po         =>    patsopt 
-    gc         =>    PATS_GC
-    tcats      =>    patscc -tcats 
-    tc         =>    patscc -tcats 
-    lm         =>    PATS_LM
-    potc       =>    patsopt --typecheck --dynamic 
-    fly        =>    patscc -tcats 
-    c          =>    myatscc 
-    tcatsc     =>    patscc -tcats 
+	my         =>    myatscc 
+	pc         =>    patscc 
+	pm         =>    PATS
+	po         =>    patsopt 
+	gc         =>    PATS_GC
+	tcats      =>    patscc -tcats 
+	tc         =>    patscc -tcats 
+	lm         =>    PATS_LM
+	potc       =>    patsopt --typecheck --dynamic 
+	fly        =>    patscc -tcats 
+	c          =>    myatscc 
+	tcatsc     =>    patscc -tcats 
 
-    myatscc    =>    myatscc 
-    patscc     =>    patscc 
-    patscc_gc  =>    PATS
-    tcats      =>    patscc -tcats 
-    patsopt    =>    patsopt 
+	myatscc    =>    myatscc 
+	patscc     =>    patscc 
+	patscc_gc  =>    PATS
+	tcats      =>    patscc -tcats 
+	patsopt    =>    patsopt 
 
-    where 
-    {
-      PATS          patscc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC 
-      PATS_GC       patscc -D_GNU_SOURCE -DATS_MEMALLOC_GCBDW 
-      PATS_LM       patscc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -lm
-    }
+	where 
+	{
+	  PATS          patscc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC 
+	  PATS_GC       patscc -D_GNU_SOURCE -DATS_MEMALLOC_GCBDW 
+	  PATS_LM       patscc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -lm
+	}
 
 
 filename:
