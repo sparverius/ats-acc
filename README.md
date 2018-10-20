@@ -42,66 +42,6 @@ Also, see TEST directory.
 
 ## Example
 
-      acc foo.dats
-
-## Usage
-
-	acc [whichcc] <filename.[d|s]ats>
-
-whichcc: (Optional)
-
-     -my         => myatscc        // generic myatscc
-     -pc         => patscc         // generic patscc
-     -po         => patsopt        // generic patsopt
-
-     -pm         => PATS           // suppot for malloc
-     -gc         => PATS_GC        // for garbage collection
-     -lm         => PATS_LM        // to link math library
-
-     -tcats      => patscc -tcats  // typecheck
-     -tc         => patscc -tcats  // alias
-     -fly        => patscc -tcats  // for use in emacs
-     -c          => patscc -tcats  // (experimental) colorized 
-     -tcatsc     => patscc -tcats  // colorized typechecking
-  
-     --myatscc   => myatscc 
-     --patscc    => patscc 
-     --patsopt   => patsopt 
-  
-     --malloc    => see -pm
-     --garbage   => see -gc
-     --math      => see -lm
-     --typecheck => see -tcats or -tc
-     --flycheck  => see -fly
-     --color     => see -c (experimental)
-
-     where {
-       PATS    = "patscc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC"
-       PATS_GC = "patscc -D_GNU_SOURCE -DATS_MEMALLOC_GCBDW"
-       PATS_LM = "patscc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -lm"
-     }
-
-filename:
-
-    valid file extensions: .dats or .sats
-
-  example:
-
-    acc -my foo.dats
-
-    acc -gc foo.dats -o foo
-
-    note: 
-      one can also construct existing options. 
-      for example, to use patscc with familiar options
-      acc -pc -DATS_GNU_SOURCE -DATS_MEMALLOC_LIBC -O2 foo.dats -o foo
-
-      or for patsopt,
-      acc -po --output foo.tags --taggen -d foo.dats
-
-
-## Example
-
 
 
 The error messages returned by current ATS compiler format:
@@ -134,6 +74,60 @@ exit(ATS): uncaught exception: (1025)
 </pre>
 
 *****
+
+
+## Usage
+
+	acc [whichcc] <filename.[d|s]ats>
+  
+(Optional)
+whichcc:
+
+	my         =>    myatscc 
+	pc         =>    patscc 
+	pm         =>    PATS
+	po         =>    patsopt 
+	gc         =>    PATS_GC
+	tcats      =>    patscc -tcats 
+	tc         =>    patscc -tcats 
+	lm         =>    PATS_LM
+	potc       =>    patsopt --typecheck --dynamic 
+	fly        =>    patscc -tcats 
+	c          =>    myatscc 
+	tcatsc     =>    patscc -tcats 
+
+	myatscc    =>    myatscc 
+	patscc     =>    patscc 
+	patscc_gc  =>    PATS
+	tcats      =>    patscc -tcats 
+	patsopt    =>    patsopt 
+
+	where 
+	{
+	  PATS          patscc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC 
+	  PATS_GC       patscc -D_GNU_SOURCE -DATS_MEMALLOC_GCBDW 
+	  PATS_LM       patscc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -lm
+	}
+
+
+filename:
+
+    valid file extensions: .dats or .sats
+
+  example:
+
+    acc my foo.dats
+    or
+    acc gc foo.dats -o foo
+
+    note: 
+      one can also construct existing options. 
+      for example, to use patscc with familiar options
+      acc -pc -DATS_GNU_SOURCE -DATS_MEMALLOC_LIBC -O2 foo.dats -o foo
+
+      or for patsopt,
+      acc -po --output foo.tags --taggen -d foo.dats
+
 
 ## Tips
 

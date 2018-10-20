@@ -89,20 +89,13 @@ end
 
 implement{}
 print_simpre
-(xs, color) = let
+(xs, color, verbose) = let
   val (error, rest) = takeskip_until_in_free(xs, lam i => is_col(i))
   val rest = drop_exn_free(rest, 0)
   val (error_statement, rest) = 
     takeskip_until_free(rest, lam i => is_osq(i))
-
 in
 //  prints 'error(...):'
-    (*
-    print_ident3; 
-    print_toks_color_err(error, color);
-    nl;
-    print_ident3;
-    *)
     print_error(error, color);
 //
     (
@@ -115,7 +108,8 @@ in
             // print_wrap(error_statement); 
             nl; 
             print_ident6; 
-            simplify_print(rest, color);
+//            print_toks(rest);
+            simplify_print(rest, color, verbose);
             print_after_all;
           )
         end
@@ -127,53 +121,66 @@ end
 
 implement{}
 print_warn
-(xs, color) = let
+(xs, color, verbose) = let
   val (error, rest) = takeskip_until_in_free(xs, lam i => is_col(i))
 in
-  (*
-  print_ident3;
-  print_toks_color_err(error, color);
-  print_after_error3;
-  *)
   print_error(error, color);
-  (* print_ident3;  *)
   print_toks_free_nonewln(rest);
+  print_after_all
 end
 
 
 implement{}
 print_parse
-(xs, color) = let
+(xs, color, verbose) = let
   val (error, rest) = takeskip_until_in_free(xs, lam i => is_col(i))
   val rest = drop_exn_free(rest, 0)
 in
 (
   print_error(error, color);
   print "[parsing] "; 
-  simplify_print(rest, color); 
+  simplify_print(rest, color, verbose); 
   print_after_all
 )
 end
 
 implement{}
 print_other
-(xs, color) = let
+(xs, color, verbose) = let
     val xs = take_until_free2(xs, lam i => tok_ide_eq(i, "typechecking"))
   in
-    (print_ident3; print_toks_free_nonewln(xs))
+    (print_ident3; print_toks_free_nonewln(xs); print_after_all)
   end
 
 
 implement{}
 print_lexing
-(xs, color) = let
+(xs, color, verbose) = let
   val (error, rest) = takeskip_until_in_free(xs, lam i => is_col(i))
   val rest = drop_exn_free(rest, 0)
 in
 (
   print_error(error, color);
   print "[lexing] "; 
-  simplify_print(rest, color); 
+  simplify_print(rest, color, verbose); 
+  print_after_all
+)
+end
+
+implement{}
+print_nonex
+(xs, color, verbose) = let
+  val (error, rest) = takeskip_until_in_free(xs, lam i => is_col(i))
+  val rest = drop_exn_free(rest, 0)
+  val (error_statement, pattern) = takeskip_until_free(rest, lam i => is_col(i))
+  val pattern = drop_exn_free(pattern, 0)
+  val pattern = take_until_free2(pattern, lam i => tok_ide_eq(i, "typechecking"))
+in
+(
+  print_error(error, color);
+  print_toks_free_nonewln(error_statement);
+  print_after_message("");
+  print_toks_free_nonewln(pattern);
   print_after_all
 )
 end
@@ -181,7 +188,7 @@ end
 
 implement{}
 print_found
-(xs, color) = let
+(xs, color, verbose) = let
   val (error, t0) = takeskip_until_in_free(xs, lam i => is_col(i))
   // h0 ... error(3):
   val x0 = drop_exn_free(t0, 0)
@@ -193,26 +200,21 @@ print_found
   val y0 = drop_exn_free(t3, 0)
 in
   (
-    (*
-    print_ident3;
-    // print_toks_free_nonewln(h0);
-    print_toks_color_err(error, color);
-    print_after_error3;
-    *)
     print_error(error, color);
     print_toks_free(h1);
     print_ident3;
     print_toks_free_nonewln(h2);
-    simplify_print(h3, color);
+    simplify_print(h3, color, verbose);
     print_ident3_nl;
-    print_toks_free_nonewln(y0)
+    print_toks_free_nonewln(y0);
+    print_after_all
   )
 end
   
 
 implement{}
 print_sorts
-(xs, color): void = let
+(xs, color, verbose): void = let
   val (error, t0) = takeskip_until_in_free(xs, lam i => is_col(i))
   val t0 = drop_exn_free(t0, 0) // drop leading space
   val (mismatch, t1) = takeskip_until_free(t0, lam i => is_col(i))
@@ -233,11 +235,11 @@ in
     print_toks_free_nonewln(mismatch);
     print_after_message("");
     print_actual(color);
-    simplify_print(actual_sort, color);
+    simplify_print(actual_sort, color, verbose);
     print_after;
     print_needed(color);
     (* print_str_color_sgn(sgn, color); *)
-    simplify_print(needed_sort, color);
+    simplify_print(needed_sort, color, verbose);
     print_after_all
   ) 
 end
@@ -246,7 +248,7 @@ end
 
 implement{}
 print_sortu
-(xs, color) = let
+(xs, color, verbose) = let
   val (error, t0) = takeskip_until_in_free(xs, lam i => is_col(i))
   val t0 = drop_exn_free(t0, 0) // drop leading space
   val (h1, t1) = takeskip_until_free(t0, lam i => is_col(i))
@@ -262,40 +264,29 @@ print_sortu
   //  val sgn = "  (=>)  "
   (* val sgn = "  ~>  " *)
   val sgn = " (should be) "
-in (
-  (*
-  print_ident3;
-  print_toks_color_err(error, color);
-  (* print_toks_free_nonewln(h0);  *)
-  print " ";
-  *)
+in
+(
   print_error(error, color);
   print_toks_free_nonewln(h1);
-  (* nl; *)
-  (* print_ident6_nl; *)
+
   print_after_message("");
 
-  //  print ("actual: "); 
   print_actual(color);
-  simplify_print(par2, color); // given
+  simplify_print(par2, color, verbose); // given
 
-
-  (* print_str_color_sgn(sgn, color); *)
-  (* print_after_message(""); *)
   print_after;
 
-  //print ("needed: ");
   print_needed(color);
-  simplify_print(par, color); // needed
+  simplify_print(par, color, verbose); // needed
 
   print_after_all
-
-) end
+) 
+end
 
 
 implement{}
 print_tyleq
-(xs, color) = let
+(xs, color, verbose) = let
   val (error, t0) = takeskip_until_in_free(xs, lam i => is_col(i))
   val (h1, t1) = takeskip_until_in_free(t0, lam i => is_col(i))
   val (h2, t2) = takeskip_until_in_free(t1, lam i => is_col(i))
@@ -333,20 +324,21 @@ print_tyleq
   val sgn_overflow = "    should be\n          "
 in
 (
+  free_toks(h2); free_toks(h4); 
+
   print_error(error, color);
   print_toks_free_nonewln(message (* h10 *));
-  free_toks(h2);
-  free_toks(h4);
+
   print_after_message("") ;
-  (* simplify_print(t40, color); *) // // orig
-  //print ("actual:  "); 
+
   print_actual(color);
-  simplify_print(h30, color); // actual
-  (* simplify_print(h30, color); *) // // orig
+  simplify_print(h30, color, verbose); // actual
+
   print_after;
-  //  print ("needed:  "); 
+
   print_needed(color);
-  simplify_print(t40, color); // needed
+  simplify_print(t40, color, verbose); // needed
+
   print_after_all
 )
 end
@@ -355,7 +347,7 @@ end
 
 implement{}
 print_dynvar
-(xs, color) =  let
+(xs, color, verbose) =  let
   val (error, tail) = takeskip_until_in_free(xs, lam i => is_col(i))
   val (head11, tail1) = takeskip_until_free(tail, lam i => is_osq(i))
   val head1 = skip_while_free(head11, lam i => is_spc(i))
@@ -377,7 +369,7 @@ in
     print_ident3_nl;
     print_toks_free(head_tail3);
     print_ident6_nl;
-    simplify_print(ht, color);
+    simplify_print(ht, color, verbose);
     print_after_all
   ) 
 end
@@ -385,7 +377,7 @@ end
 
 implement{}
 print_cstpat
-(xs, color) = let
+(xs, color, verbose) = let
   val (error, xs0) = takeskip_until_free(xs, lam x => is_col(x))
   val xs1 = skip_until_free(xs0, lam x => is_ide(x))
   val (error_statement, xs2) = takeskip_until_free(xs1, lam x => is_osq(x))
@@ -394,12 +386,17 @@ in
 (
   print_error(error, color);
   free_toks(rest);
+
   print_after_error3;
+
   print_toks_free_nonewln(error_statement);
+
   print_after_message("");    
+
   print "[ ";
-  simplify_print(xs3, color);
+  simplify_print(xs3, color, verbose);
   print " ]";
+
   print_after_all
 )
 end
@@ -407,7 +404,7 @@ end
 
 implement{}
 print_dynexp
-(xs: toks, color: bool): void = let
+(xs, color, verbose) = let
   (* val type_message = "TYPE::=  " *)
   val type_message = "TYPE::=  "
   val type_message = "\\_ "
@@ -472,7 +469,7 @@ in
         (* nl; *) // ... cannot be assigned the type
         print_after_message(type_message); // print_ident6_nl;
         print "[";
-        simplify_print(par, color); 
+        simplify_print(par, color, verbose); 
         print "]";
         )
         else free_toks(par)
@@ -495,7 +492,7 @@ end
 
 implement{}
 print_unsolv // newest
-(xs, color) = let
+(xs, color, verbose) = let
 
   val (x0, xs0) = takeskip_until_in_free(xs, lam x => is_col(x))
   //  val () 
@@ -543,12 +540,12 @@ in
             print_after_message("");
           //  print ("actual: "); 
           print_actual(color);
-            simplify_print(first0, color); // actual
+            simplify_print(first0, color, verbose); // actual
           print_after;
             // print_str_color_sgn(sgn, color);
           //  print ("needed: "); 
           print_needed(color);
-            simplify_print(partail_tail, color); // needed
+            simplify_print(partail_tail, color, verbose); // needed
             print_after_all
           end
         ) else (free_toks(first0); free_toks(partail_tail); )
@@ -560,7 +557,7 @@ in
       (
         nl;
         print_ident6_nl;
-        simplify_print(xs, color); 
+        simplify_print(xs, color, verbose); 
         print_after_all
       )
     end
@@ -574,14 +571,14 @@ end
 
 implement{}
 print_exit2
-(xs, color) = let
+(xs, color, verbose) = let
   val (error, ts) = takeskip_until_in_free(xs, lam i => is_col(i))
   val () = print_error(error, color)
   val xs = drop_exn_free(ts, 0)
   fun
   auxmain(xs0: toks, i: int): void = 
     case+ xs0 of 
-    | ~nil_vt() => () 
+    | ~nil_vt() => (print_after_all) 
     | ~cons_vt(x, xs) => let
         val len = i + tok_get_len(x)
       in
@@ -604,7 +601,7 @@ end
 
 implement{}
 print_symbol
-(xs, color) = let
+(xs, color, verbose) = let
     val (error, t0) = takeskip_until_in_free(xs, lam i => is_col(i))
     val l1 = drop_exn_free(t0, 0)
     val (h1, t1) = takeskip_until_in_free(l1, lam i => is_nwl(i))
@@ -632,8 +629,8 @@ end
 
 implement{}
 print_last
-(xs, color) = let
-  val () = println!()
+(xs, color, verbose) = let
+  // val () = nl // for two lines before final message
   val (x0, x1, x2) = (xs.0, xs.1, xs.2)
   val (h,t) = takeskip_until_free(x1, lam i => tok_ide_eq(i, "exit"))
   val x3 = skip_until_free(x2, lam i => is_opr(i))
@@ -659,6 +656,7 @@ in
       print_str_color(": ", color, "yellow")
     );
     print_toks_free_nonewln(x3);
+    (* print_after_all *)
     // print_toks_color_err(x3, color);
   ) 
 end
@@ -666,7 +664,7 @@ end
 
 implement{}
 print_show
-(xs, color) = let
+(xs, color, verbose) = let
   (* val type_symbol = "=T=  "  *)
   val type_symbol = "SHOWTYPE:: " 
 in
@@ -677,7 +675,7 @@ in
   (* print_str_color_show("=T=  ", color); *)
   print_str_color_show(type_symbol, color);
   print_ident6_nl;
-  simplify_print(xs, color);
+  simplify_print(xs, color, verbose);
   nl;
 )
 end
