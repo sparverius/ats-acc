@@ -735,7 +735,8 @@ auxmain(xs1: toks): void =
   | ~cons_vt(x0, xs0) =>
     ifcase
     | is_spc(x0) => (print_token0_free(x0); auxmain(xs0)) (*  ' '  *)
-    | is_csq(x0) => (free_token(x0); free_toks(xs0)) //auxmain(xs0)) (*  ']'  *)
+    | is_csq(x0) => (free_token(x0); auxmain(xs0)) (*  ']'  *)
+    | is_osq(x0) => (free_token(x0); auxmain(xs0)) (*  '['  *)
     | is_opr(x0) => (print_token0_free(x0); auxmain(xs0)) (*  '('  *)
     | is_cpr(x0) => (print_token0_free(x0); auxmain(xs0)) (*  ')'  *)
     | is_int(x0) => (just_print(x0, color, "dim", verbose); auxmain(xs0)) (*  int  *)
