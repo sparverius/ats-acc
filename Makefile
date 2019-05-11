@@ -26,14 +26,14 @@ all::
 #
 
 all:: ; make -C $(DIR) && printf "$?" && echo "Build Successful" \
-|| printf "\nBuilding acc Failed\n" 
-all:: ; [ -f "./DATS/acc" ] && mv ./DATS/acc .
+|| printf "\nBuilding tacc Failed\n" 
+all:: ; [ -f "./DATS/tacc" ] && mv ./DATS/tacc .
 
 #
 ######
 
 regress:: \
-acc; ./$<
+tacc; ./$<
 
 ######
 
@@ -46,19 +46,19 @@ testall:: cleanall
 test0:: cleanall
 test0:: all
 
-trytest: test0
-trytest: ; ./acc tcatsc ${ARG1}
+# trytest: test0
+# trytest: ; ./tacc tcatsc ${ARG1}
 
 ######
 
-install:: ; [ -f "./acc" ] && \
-echo "Installing acc at \$$PATSHOME/bin/" && mv acc $(PATSHOME)/bin/ || \
-echo "Oops. Something went wrong. Build acc manually with the command 'make && make install'"
+install:: ; [ -f "./tacc" ] && \
+echo "Installing tacc at \$$TEMPTORY/bin/" && mv tacc $(TEMPTORY)/bin/ || \
+echo "Oops. Something went wrong. Build tacc manually with the command 'make && make install'"
 
 
 ######
 
-check_install:: ; printf "acc is located at: " && which acc
+# check_install:: ; printf "acc is located at: " && which acc
 
 ######
 
@@ -70,8 +70,8 @@ testrun:: ; -@sh ./TEST/tests.sh
 
 ######
 
-run-withargs:: ; -@./acc -tcats ${ARG1}
-run-valgrind:: ; -@valgrind ./acc -tcats ${ARG1} >/dev/null
+# run-withargs:: ; -@./tacc -tcats ${ARG1}
+# run-valgrind:: ; -@valgrind ./acc -tcats ${ARG1} >/dev/null
 
 ######
 
@@ -84,5 +84,5 @@ clean:: ; rm -f *_?ats.c
 
 cleanall:: clean
 cleanall:: ; make -C $(DIR) cleanall
-cleanall:: ; rm -f acc
+cleanall:: ; rm -f tacc
 ###### end of [Makefile] ######

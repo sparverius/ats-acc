@@ -22,8 +22,8 @@ all::
 #
 
 all:: \
-acc
-acc: \
+tacc
+tacc: \
 main.dats; \
 $(PATSCC) -cleanaft -D_GNU_SOURCE -O2 -DATS_MEMALLOC_LIBC -o $@ $< -latslib
 # $(PATSCC) -cleanaft -O3 -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -o $@ $< -latslib
@@ -31,7 +31,7 @@ $(PATSCC) -cleanaft -D_GNU_SOURCE -O2 -DATS_MEMALLOC_LIBC -o $@ $< -latslib
 ######
 
 regress:: \
-acc; ./$<
+tacc; ./$<
 
 ######
 
@@ -43,7 +43,7 @@ testall:: cleanall
 
 test2:: cleanall
 test2:: all
-test2:: ; (time ./acc -pc 806_errors.dats)
+test2:: ; (time ./tacc -pc 806_errors.dats)
 
 ######
 
@@ -52,24 +52,24 @@ test0:: all
 
 ######
 
-runit:: ; -@./acc -tcats ${ARG1} 
+runit:: ; -@./tacc -tcats ${ARG1} 
 
 ######
 
 run:: ; @echo -e "\e[33mbuilding...\e[0m"
 run:: test0
-run:: ; @echo -e "\e[36mrunning acc\e[0m" && echo -e "\e[36m>>>\e[0m"
+run:: ; @echo -e "\e[36mrunning tacc\e[0m" && echo -e "\e[36m>>>\e[0m"
 run:: runit
 
 ######
 
-runitt:: ; -@valgrind ./acc -tcats ${ARG1} ${ARG2} >/dev/null
+runitt:: ; -@valgrind ./tacc -tcats ${ARG1} ${ARG2} >/dev/null
 
 ######
 
 runt:: ; @echo -e "\e[33mbuilding...\e[0m"
 runt:: test0
-runt:: ; @echo -e "\e[36mrunning acc\e[0m" && echo -e "\e[36m>>>\e[0m"
+runt:: ; @echo -e "\e[36mrunning tacc\e[0m" && echo -e "\e[36m>>>\e[0m"
 runt:: runitt
 
 
@@ -82,5 +82,5 @@ clean:: ; rm -f *_?ats.c
 ######
 
 cleanall:: clean
-cleanall:: ; rm -f acc
+cleanall:: ; rm -f tacc
 ###### end of [Makefile] ######

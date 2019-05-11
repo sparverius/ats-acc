@@ -46,33 +46,31 @@ staload UN = "prelude/SATS/unsafe.sats"
 
 
 fn print_usage(): void = print!("
-acc [whichcc] <filename.dats> 
+tacc [whichcc] <filename.dats> 
   
 whichcc:
-    my         =>    myatscc 
-    pc         =>    patscc 
-    pm         =>    PATS
-    po         =>    patsopt 
-    gc         =>    PATS_GC
-    tcats      =>    patscc -tcats 
-    tc         =>    patscc -tcats 
-    lm         =>    PATS_LM
-    potc       =>    patsopt --typecheck --dynamic 
-    fly        =>    patscc -tcats 
+    pc         =>    tempacc 
+    pm         =>    TEMP
+    po         =>    tempopt 
+    gc         =>    TEMP_GC
+    tcats      =>    tempacc -tcats 
+    tc         =>    tempacc -tcats 
+    lm         =>    TEMP_LM
+    potc       =>    tempopt --typecheck --dynamic 
+    fly        =>    tempacc -tcats 
     c          =>    myatscc 
-    tcatsc     =>    patscc -tcats 
+    tcatsc     =>    tempacc -tcats 
 
-    myatscc    =>    myatscc 
-    patscc     =>    patscc 
-    patscc_gc  =>    PATS
-    tcats      =>    patscc -tcats 
-    patsopt    =>    patsopt 
+    tempacc     =>    tempacc 
+    tempacc_gc  =>    TEMP
+    tcats      =>    tempacc -tcats 
+    tempopt    =>    tempopt 
 
     where 
     {
-      PATS          patscc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC 
-      PATS_GC       patscc -D_GNU_SOURCE -DATS_MEMALLOC_GCBDW 
-      PATS_LM       patscc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -lm
+      TEMP          tempacc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC 
+      TEMP_GC       tempacc -D_GNU_SOURCE -DATS_MEMALLOC_GCBDW 
+      TEMP_LM       tempacc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -lm
     }
 
 ")
@@ -102,64 +100,64 @@ patsopt --output cf_dats.c --dynamic cf.dats
 PATS_LM "patscc -tcats -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -latslib -lm -g " 
 *)
 
-#define PATS "patscc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC "
-#define PATS_GC "patscc -D_GNU_SOURCE -DATS_MEMALLOC_GCBDW "
-#define PATS_LM "patscc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -lm "
+#define TMPATS "tempacc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC "
+#define TMPATS_GC "tempacc -D_GNU_SOURCE -DATS_MEMALLOC_GCBDW "
+#define TMPATS_LM "tempacc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -lm "
 
 
 fn get_whichcc(name: string): string = 
 (
   case+ name of
-    | "my" => "myatscc "
-    | "pc" => "patscc "
-    | "pm" => PATS
-    | "po" => "patsopt "
-    | "gc" => PATS_GC
-    | "tcats" => "patscc -tcats "
-    | "tc" => "patscc -tcats "
-    | "lm" => PATS_LM
-    | "potc" => "patsopt --typecheck --dynamic "
-    | "fly" =>  "patscc -tcats "
+    (* | "my" => "myatscc " *)
+    | "pc" => "tempacc "
+    | "pm" => TMPATS
+    | "po" => "tempopt "
+    | "gc" => TMPATS_GC
+    | "tcats" => "tempacc -tcats "
+    | "tc" => "tempacc -tcats "
+    | "lm" => TMPATS_LM
+    | "potc" => "tempopt --typecheck --dynamic "
+    | "fly" =>  "tempacc -tcats "
     | "c" => "myatscc "
-    | "tcatsc" => "patscc -tcats "
+    | "tcatsc" => "tempacc -tcats "
 
-    | "-my" => "myatscc "
-    | "-pc" => "patscc "
-    | "-pm" => PATS
-    | "-po" => "patsopt "
-    | "-gc" => PATS_GC
-    | "-tcats" => "patscc -tcats "
-    | "-tc" => "patscc -tcats "
-    | "-lm" => PATS_LM
-    | "-potc" => "patsopt --typecheck --dynamic "
-    | "-fly" =>  "patscc -tcats "
+//    | "-my" => "myatscc "
+    | "-pc" => "tempacc "
+    | "-pm" => TMPATS
+    | "-po" => "tempopt "
+    | "-gc" => TMPATS_GC
+    | "-tcats" => "tempacc -tcats "
+    | "-tc" => "tempacc -tcats "
+    | "-lm" => TMPATS_LM
+    | "-potc" => "tempopt --typecheck --dynamic "
+    | "-fly" =>  "tempacc -tcats "
     | "-c" => "myatscc "
 
 
     | "myatscc" => "myatscc "
-    | "patscc" => "patscc "
-    | "patscc_gc" => PATS
-    | "tcats" => "patscc -tcats "
-    | "patsopt" => "patsopt "
+    | "tempacc" => "tempacc "
+    | "tempacc_gc" => TMPATS
+    | "tcats" => "tempacc -tcats "
+    | "tempopt" => "tempopt "
     | _ =>  "err" // otherwise error
 
 (*
     | "-my" => "myatscc "
-    | "-pc" => "patscc "
+    | "-pc" => "tempacc "
     | "-pm" => PATS
     | "-po" => "patsopt "
     | "-gc" => PATS_GC
-    | "-tcats" => "patscc -tcats "
-    | "-tc" => "patscc -tcats "
+    | "-tcats" => "tempacc -tcats "
+    | "-tc" => "tempacc -tcats "
     | "-lm" => PATS_LM
     | "-potc" => "patsopt --typecheck --dynamic "
-    | "-fly" =>  "patscc -tcats "
-    | "-c" => "patscc -tcats "
+    | "-fly" =>  "tempacc -tcats "
+    | "-c" => "tempacc -tcats "
 
     | "--myatscc" => "myatscc "
-    | "--patscc" => "patscc "
-    | "--patscc_gc" => PATS
-    | "--tcats" => "patscc -tcats "
+    | "--tempacc" => "tempacc "
+    | "--tempacc_gc" => PATS
+    | "--tcats" => "tempacc -tcats "
     | "--patsopt" => "patsopt "
     | _ =>  "err" // otherwise error
 *)
@@ -178,9 +176,9 @@ fn
 print_c_error
 (xs: toks): void = 
 (
-  println!("\n------------------ C COMPILER MESSAGES ------------------\n");
+  println!("\n------------------ COMPILER MESSAGES ------------------\n");
   print_toks_all(xs);
-  println!("\n-------------- END C COMPILER MESSAGES ------------------\n");
+  println!("\n-------------- END COMPILER MESSAGES ------------------\n");
 )
 
 fn
