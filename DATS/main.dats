@@ -1,20 +1,20 @@
 // Life is fun, ATS is fun so, ATS error reporting should be fun too.
 
 // A wrapper around the ats compiler/typechecker (and its wrappers)
-// 
 //
-// NOTE: This is LARGELY an unfinished product 
+//
+// NOTE: This is LARGELY an unfinished product
 //               and is still being actively developed.
 //
 //
 // Primarily seeks to make error reporting easier to read
-// with the hope of also creating a unified tool surrounding 
+// with the hope of also creating a unified tool surrounding
 // the ats compiler.
 //
 // The ideal form of the executable is one tool amasing many tools
 // (alike 'cabal' for haskell).
 //
-// At some point, will merge into this project a REPL-like evaluator 
+// At some point, will merge into this project a REPL-like evaluator
 // for ats that I have been working on as well as a code formatter.
 //
 
@@ -46,58 +46,42 @@ staload UN = "prelude/SATS/unsafe.sats"
 
 
 fn print_usage(): void = print!("
-tacc [whichcc] <filename.dats> 
-  
-whichcc:
-    pc         =>    tempacc 
-    pm         =>    TEMP
-    po         =>    tempopt 
-    gc         =>    TEMP_GC
-    tcats      =>    tempacc -tcats 
-    tc         =>    tempacc -tcats 
-    lm         =>    TEMP_LM
-    potc       =>    tempopt --typecheck --dynamic 
-    fly        =>    tempacc -tcats 
-    c          =>    myatscc 
-    tcatsc     =>    tempacc -tcats 
+tacc [whichcc] <filename.dats>
 
-    tempacc     =>    tempacc 
-    tempacc_gc  =>    TEMP
-    tcats      =>    tempacc -tcats 
-    tempopt    =>    tempopt 
+Option whichcc:
+    acc        =>    tempacc
+    opt        =>    tempopt
+    tc         =>    tempacc -tcats
+    mem        =>    tempacc -DATS_MEMALLOC_LIBC
+    gc         =>    tempacc -DATS_MEMALLOC_GCBDW
 
-    where 
-    {
-      TEMP          tempacc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC 
-      TEMP_GC       tempacc -D_GNU_SOURCE -DATS_MEMALLOC_GCBDW 
-      TEMP_LM       tempacc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -lm
-    }
+    note: mytempacc is the default
 
 ")
 
 (*
   // for future
-  --json                        patsopt --jsonize-2 -d 
-                                patsopt --jsonize-2 -s 
-  --taggen                      patsopt --taggen -s 
+  --json                        patsopt --jsonize-2 -d
+                                patsopt --jsonize-2 -s
+  --taggen                      patsopt --taggen -s
                                 patsopt --taggen -d
-  --patsoptv              
+  --patsoptv
 *)
 
 
-(* 
-patsopt --output cf_dats.c --dynamic cf.dats 
+(*
+patsopt --output cf_dats.c --dynamic cf.dats
 *)
-(* 
-"gcc -std=c99 -D_XOPEN_SOURCE 
-  -I${PATSHOME} -I${PATSHOME}/ccomp/runtime -L${PATSHOME}/ccomp/atslib/lib " 
+(*
+"gcc -std=c99 -D_XOPEN_SOURCE
+  -I${PATSHOME} -I${PATSHOME}/ccomp/runtime -L${PATSHOME}/ccomp/atslib/lib "
 *)
-(* 
+(*
 #define PATS_CLEAN "patscc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -cleanaft "
 *)
-(* 
-#define 
-PATS_LM "patscc -tcats -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -latslib -lm -g " 
+(*
+#define
+PATS_LM "patscc -tcats -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -latslib -lm -g "
 *)
 
 #define TMPATS "tempacc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC "
@@ -105,12 +89,13 @@ PATS_LM "patscc -tcats -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -latslib -lm -g "
 #define TMPATS_LM "tempacc -D_GNU_SOURCE -DATS_MEMALLOC_LIBC -lm "
 
 
-fn get_whichcc(name: string): string = 
+fn get_whichcc(name: string): string =
 (
   case+ name of
     (* | "my" => "myatscc " *)
     | "pc" => "tempacc "
     | "pm" => TMPATS
+    | "mem" => TMPATS
     | "po" => "tempopt "
     | "gc" => TMPATS_GC
     | "tcats" => "tempacc -tcats "
@@ -118,8 +103,9 @@ fn get_whichcc(name: string): string =
     | "lm" => TMPATS_LM
     | "potc" => "tempopt --typecheck --dynamic "
     | "fly" =>  "tempacc -tcats "
-    | "c" => "myatscc "
+    | "c" => "mytempacc "
     | "tcatsc" => "tempacc -tcats "
+    | "dry" => "mytempacc --dryrun "
 
 //    | "-my" => "myatscc "
     | "-pc" => "tempacc "
@@ -131,10 +117,10 @@ fn get_whichcc(name: string): string =
     | "-lm" => TMPATS_LM
     | "-potc" => "tempopt --typecheck --dynamic "
     | "-fly" =>  "tempacc -tcats "
-    | "-c" => "myatscc "
+    | "-c" => "mytempacc "
 
 
-    | "myatscc" => "myatscc "
+    | "myatscc" => "mytempacc "
     | "tempacc" => "tempacc "
     | "tempacc_gc" => TMPATS
     | "tcats" => "tempacc -tcats "
@@ -174,7 +160,7 @@ unlink:(string) -> int = "ext#"
 
 fn
 print_c_error
-(xs: toks): void = 
+(xs: toks): void =
 (
   println!("\n------------------ COMPILER MESSAGES ------------------\n");
   print_toks_all(xs);
@@ -183,7 +169,7 @@ print_c_error
 
 fn
 cleanup
-(in_f: FILEref, xy: Strptr1, x: List0_vt(string), fcmd0: Strptr1): void = 
+(in_f: FILEref, xy: Strptr1, x: List0_vt(string), fcmd0: Strptr1): void =
 (
     fileref_close(in_f);
     strptr_free(xy);
@@ -195,13 +181,13 @@ fn
 is_other_error_type
 (listvt_of_tokens: !toks): bool = let
     val first_is0 = head_is_pred
-        (listvt_of_tokens, 
+        (listvt_of_tokens,
           lam i => not(tok_chr_eq(i, '/')) && not(tok_chr_eq(i, '*')))
-    val n_is0 = toks_n_is_pred_ide 
-        (listvt_of_tokens, 
+    val n_is0 = toks_n_is_pred_ide
+        (listvt_of_tokens,
           lam i => (tok_ide_eq(i, "tmp") || tok_ide_eq(i, "usr")), 0)
 in
-  first_is0 || n_is0  
+  first_is0 || n_is0
 end
 
 
@@ -213,7 +199,7 @@ get_show_options(name: string) : (bool, bool, bool, bool) = let
   val loc = (if name = "fly" || name = "-fly" then false else true)
   val verbose = (if name = "c" || name = "tcatsc" || name = "tc" then false else true)
 in
-  (color_choice, linenum, loc, verbose)  
+  (color_choice, linenum, loc, verbose)
 end
 
 (*
@@ -221,7 +207,7 @@ end
      list_from_listvt  :  converts from list_vt to list
                           prepends unsafe to manually free linear list later
   stringptr_from_list  :  create one string from the list of strings
-string_from_stringptr  :  convert strptr to a string 
+string_from_stringptr  :  convert strptr to a string
                           prepends unsafe to manually free string later
                  name  :  option of whichcc -- if not found, exit
               whichcc  :  get the corresponding option - if not found, exit
@@ -230,21 +216,21 @@ string_from_stringptr  :  convert strptr to a string
                           prepends unsafe to manually free string later
          logfile_name  :  name of file used to put output of command into
     popen_return_code  :  popen cmd2
-           input_file  :  opens file logfile_name 
+           input_file  :  opens file logfile_name
                           (if empty popen did not write to it.)
    streamvt_of_tokens  :  error messages tokenized
      listvt_of_tokens  :  converts the linear stream to a linear list
 *)
 fn
 run
-(arguments: List0_vt(string), name: string): int = let 
+(arguments: List0_vt(string), name: string): int = let
     val list_from_listvt = $UN.list_vt2t(arguments)
     val stringptr_from_list = stringlst_concat(list_from_listvt)
     val string_from_stringptr = $UN.strptr2string(stringptr_from_list)
     val whichcc = get_whichcc(name)
-    val () = ( if whichcc = "err" 
+    val () = ( if whichcc = "err"
         then (println!("whichcc error");print_usage(); exit(1) : void))
-    val command_stringptr 
+    val command_stringptr
       = string_append(whichcc, string_from_stringptr, " 2>&1 ")
     val command_string = $UN.strptr2string(command_stringptr)
     val logfile_name = ".log" : string
@@ -254,9 +240,9 @@ run
     val stream_of_tokens = tokenize(streamize_fileref_char(input_file))
     val listvt_of_tokens = stream2list_vt(stream_of_tokens)
     //
-  val return_code = (  
+  val return_code = (
     ifcase
-    | is_other_error_type(listvt_of_tokens)  => 
+    | is_other_error_type(listvt_of_tokens)  =>
         let val () = print_c_error(listvt_of_tokens) in 1 end
     | iseqz listvt_of_tokens =>
         let val () = free_toks(listvt_of_tokens) in 0 end
@@ -264,7 +250,7 @@ run
         val (color_choice, linenum, loc, verbose) = get_show_options(name)
         //  tokens converted and divided into separate messages
         val messages = tokens_to_messages_free(listvt_of_tokens)
-        //  the separated messages are then classified 
+        //  the separated messages are then classified
         val classified_messages = classify_toks_free(messages)
         //  the classified messages are then pretty-printed
         val () =
@@ -307,18 +293,18 @@ val x =  ( let
 
 
 implement
-main 
-{n} (argc, argv) = res where 
+main
+{n} (argc, argv) = res where
 {
-  val err =   // response to argc = 0 .. 
+  val err =   // response to argc = 0 ..
     (lam () => println!( "... demons may fly out of my nose..."))
-  val res = 
+  val res =
     ifcase
     | argc >= 2 =>
     (
       let
-      val x = ( 
-        fix loop 
+      val x = (
+        fix loop
         (ac: int n, av: !argv(n), i: natLte(n), res: List0_vt(string))
         : List0_vt(string) =>
             ifcase
@@ -328,12 +314,12 @@ main
         )(argc, argv, if (argc = 2) then 1 else 2, nil_vt())
       // val () = println!("x = ", x)
 
-      val 
+      val
       res = (
-        case+ argc of 
+        case+ argc of
         | 2 => (
-                 if strstr(g1ofg0(argv[1]), ".dats") >= 0 
-                 then run(x, "c") 
+                 if strstr(g1ofg0(argv[1]), ".dats") >= 0
+                 then run(x, "c")
                  else (print_usage(); free(x); 1)
                )
         | 3 => let
@@ -345,7 +331,7 @@ main
         | (* >= 4 *)_ => let
             val () = assertloc(argc >= 4)
             val name = argv[1] : string
-          in  
+          in
             run(x, name)
           end
       )
@@ -353,7 +339,7 @@ main
         res
       end
     )
-    | argc = 0 => let val () = (err(); print_usage()) in 9 end 
+    | argc = 0 => let val () = (err(); print_usage()) in 9 end
     | _ => (* argc = 1 => *) let val () = print_usage() in 1 end
 }
 
